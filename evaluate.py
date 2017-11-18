@@ -7,7 +7,7 @@ from time import strftime
 from torch.autograd import Variable
 from utils.dataset import create_dataloader_from_path
 from models.quant_scientist_net import Net
-use_cuda = torch.cuda.is_available()
+use_cuda = False
 
 
 def main():

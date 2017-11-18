@@ -70,9 +70,13 @@ def train(model, train_loader, val_loader):
         logging.info(f"VALIDATION Loss: {avg_eval_loss_for_epoch:.3f}")
         val_losses.append(avg_eval_loss_for_epoch)
 
+        # if len(val_losses) >= 2:
+        #     if val_losses[-1] > val_losses[-2]:
+        #         break
+
     os.makedirs(args.save_model_dir, exist_ok=True)
-    torch.save(model.state_dict(), os.path.join(args.save_model_dir, "cnn.pth"))
-    # torch.save(model.state_dict(), os.path.join(args.save_model_dir, strftime("%H%M-%Y-%m-%d")))
+    # torch.save(model.state_dict(), os.path.join(args.save_model_dir, "cnn.pth"))
+    torch.save(model.state_dict(), os.path.join(args.save_model_dir, strftime("%H%M-%Y-%m-%d")+'.pth'))
 
 
 if __name__ == "__main__":
@@ -81,10 +85,10 @@ if __name__ == "__main__":
     parser.add_argument("--test_data_fp", default="data/test.json")
     parser.add_argument("--save_model_dir", default="model_checkpoint")
     parser.add_argument("--batch_size", default=32)
-    parser.add_argument("--num_epochs", default=3)
-    parser.add_argument("--learning_rate", default=0.001)
+    parser.add_argument("--num_epochs", default=128)
+    parser.add_argument("--learning_rate", default=0.00005)
     parser.add_argument("--log_level", default="INFO")
     args = parser.parse_args()
     log_level = logging.getLevelName(args.log_level)
-    logging.basic_config(level=log_level)
+    logging.basicConfig(level=log_level)
     main()
