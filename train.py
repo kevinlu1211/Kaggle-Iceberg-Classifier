@@ -1,10 +1,12 @@
 import argparse
+from torch.nn import functional as F
 import os
 import torch
 from time import strftime
 import logging
 from torch.autograd import Variable
 from models.quant_scientist_net import Net
+from models.densenet import DenseNet
 from utils.dataset import create_train_val_dataloaders
 from tqdm import tqdm
 use_cuda = torch.cuda.is_available()
@@ -12,7 +14,7 @@ use_cuda = torch.cuda.is_available()
 
 def main():
     train_loader, val_loader = create_train_val_dataloaders(args.train_data_fp, batch_size=args.batch_size)
-    model = Net()
+    model = DenseNet(block_config=(4, 8, 16, 8), drop_prob=0)
     if use_cuda:
         model = model.cuda()
     train(model, train_loader, val_loader)
@@ -38,6 +40,7 @@ def train(model, train_loader, val_loader):
                     label)  # RuntimeError: expected CPU tensor (got CUDA tensor)
 
             out = model(img)
+            out = F.sigmoid(out)
             loss = criterion(out, label)
 
             optimizer.zero_grad()
@@ -63,6 +66,7 @@ def train(model, train_loader, val_loader):
                 label = Variable(label, volatile=True)
 
             out = model(img)
+            out = F.sigmoid(out)
             loss = criterion(out, label)
             eval_losses_for_epoch.append(loss.data[0])
 
@@ -81,6 +85,7 @@ def train(model, train_loader, val_loader):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--architecture", default="densenet")
     parser.add_argument("--train_data_fp", default="data/train.json")
     parser.add_argument("--test_data_fp", default="data/test.json")
     parser.add_argument("--save_model_dir", default="model_checkpoint")

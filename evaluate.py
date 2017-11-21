@@ -1,4 +1,5 @@
 import os
+from torch.nn import functional as F
 import pandas as pd
 import argparse
 from tqdm import tqdm
@@ -41,6 +42,7 @@ def evaluate(model, test_dataloader):
             img, label = Variable(img), Variable(label)
 
         out = model(img)
+        out = F.sigmoid(out)
         probs.extend(out.view(-1).data.numpy().tolist())
         ids.extend(id)
     write_to_csv(ids, probs)

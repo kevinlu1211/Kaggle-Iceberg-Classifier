@@ -33,10 +33,8 @@ class Net(nn.Module):
 
         self.classifier = nn.Sequential(nn.Linear(self.n_features, 1),
                                         # nn.Linear(2048, 512),
-                                        # nn.Linear(512, 1),
-                                        nn.Sigmoid())
-
-
+                                        # nn.Linear(512, 1)
+                                        )
     def _get_conv_output(self, shape):
         bs = 1
         input = Variable(torch.rand(bs, *shape))
