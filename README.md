@@ -1,9 +1,9 @@
-# Kaggle-Iceberg-Classifier
+# Kaggle Iceberg Classifier 
 
 ### Things to do:
 * Try transfer learning using ResNet/VGG
 
-* Implement DenseNet
+* ~~Implement DenseNet~~
     * Try to use an Seq2Seq with attention on the output of the Dense blocks, and concatenate that to the 
     final feature vector before classification
     
