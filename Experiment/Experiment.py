@@ -26,11 +26,12 @@ class Experiment(object):
         # Dump the models metadata into the /models_metadata folder which conveniently creates
         # the folder to hold all the data for this experiment
         models_metadata_path = Path(f"{self.experiment_path}/models_metadata")
-        experiment_path.mkdir(parents=True, exist_ok=True)
+        models_metadata_path.mkdir(parents=True, exist_ok=True)
         self.experiment_is_created = True
 
     def save_experiment(self, ckpt_names=None):
-        if ckpt_names == None:
+
+        if ckpt_names is None:
             ckpt_names = [strftime("%Y%m%d-%H%M%S")] * len(self.models)
 
         if self.experiment_is_created:
@@ -81,7 +82,7 @@ class Experiment(object):
             model.load_state_dict(f"{experiment_path}/{model_id}/{ckpt_name}")
             if for_eval:
                 model.eval()
-    
+
     def load_model_metadata(self, meta_data_file_paths):
         return [json.loads(p) for p in meta_data_file_paths]
 
