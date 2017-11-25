@@ -14,7 +14,7 @@ use_cuda = torch.cuda.is_available()
 
 def main():
     train_loader, val_loader = create_train_val_dataloaders(args.train_data_fp, batch_size=args.batch_size)
-    model = DenseNet(block_config=(4, 8, 16, 8), drop_prob=0)
+    model = DenseNet(drop_prob=0)
     if use_cuda:
         model = model.cuda()
     train(model, train_loader, val_loader)

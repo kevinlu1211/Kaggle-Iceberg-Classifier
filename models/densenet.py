@@ -130,7 +130,7 @@ class DenseNet(nn.Module):
         # Input layer conv
         self.features = nn.Sequential(
             OrderedDict([
-                ('conv0', nn.Conv2d(3, n_init_features, kernel_size=5, stride=1))
+                ('conv0', nn.Conv2d(3, n_init_features, kernel_size=7, stride=1))
             ])
         )
         n_features = n_init_features
