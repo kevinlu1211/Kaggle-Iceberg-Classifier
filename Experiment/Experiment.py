@@ -28,28 +28,33 @@ class Experiment(object):
             inp_data, label = Variable(inp).cuda(), Variable(label).cuda()
         else:
             inp_data, label = Variable(inp), Variable(label)
+        self.model.train()
         model_output = self.model(inp_data)
 
+        # TODO: Justify whether or not this hook is needed, maybe there isn't a need as we could simply do this in the
+        # TODO: model definition
         # Transform the output here as we will get unnormalized probailities from our models
         # since we don't want our models to be coupled with the data
-        transformed_output = self.output_transformation(self.model_output) if self.output_transformation \
+        transformed_output = self.output_transformation(model_output) if self.output_transformation \
                                                                             else model_output
         model_loss = self.loss_function(transformed_output, label)
         self.optimizer.zero_grad()
         model_loss.backward()
         self.optimizer.step()
 
-        return model_output, model_loss
+        return transformed_output, model_loss
 
-    def eval_step(self, inp, label):
+    def val_step(self, inp, label):
         if self.use_cuda:
             inp_data, label = Variable(inp).cuda(), Variable(label).cuda()
         else:
             inp_data, label = Variable(inp), Variable(label)
+        self.model.eval()
         model_output = self.model(inp_data)
-        transformed_output = self.output_transformation(self.model_output) if self.output_transformation \
+        transformed_output = self.output_transformation(model_output) if self.output_transformation \
                                                                             else model_output
-        return transformed_output
+        model_loss = self.loss_function(transformed_output, label)
+        return transformed_output, model_loss
 
     def save_experiment(self, experiment_path, ckpt_name):
 

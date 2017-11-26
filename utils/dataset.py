@@ -49,8 +49,8 @@ class IcebergDataset(torch.utils.data.Dataset):
         if is_train:
             self.transform = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.RandomCrop(60),
-                transforms.RandomHorizontalFlip(),
+                # transforms.RandomCrop(60),
+                # transforms.RandomHorizontalFlip(),
                 transforms.ToTensor()
             ])
         else:

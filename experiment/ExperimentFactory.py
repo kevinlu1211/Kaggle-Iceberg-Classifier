@@ -1,3 +1,4 @@
+from copy import deepcopy
 from .Experiment import Experiment
 class ExperimentFactory(object):
 
@@ -29,6 +30,15 @@ class ExperimentFactory(object):
 
 
     def create_experiment(self, experiment_metadata):
+        """
+
+        :param experiment_metadata: dictionary reflecting the JSON data in the .meta files from metadata_folder_path
+        :return: An Experiment object
+        """
+
+        # Make a shallow copy so that we don't change the original experiment_metadata, since we can't json.dump
+        # the "params" key value pair for the optimizer
+        experiment_metadata = deepcopy(experiment_metadata)
 
         # Create the model
         model_name = experiment_metadata.get("model_name")
@@ -57,5 +67,5 @@ class ExperimentFactory(object):
                                                                    output_transformation_parameters)
 
         return Experiment(experiment_metadata, model, output_transformation,
-                          optimizer, loss_function, use_cuda=self.use_cuda)
+                          loss_function, optimizer, use_cuda=self.use_cuda)
 

@@ -21,8 +21,7 @@ class ExperimentsController(object):
 
         # Dump the models metadata into the /models_metadata folder which conveniently creates
         # the folder to hold all the data for this experiment
-        self.copy_metadata_files()
-        self.experiment_is_created = True
+        self.copy_metadata_files(metadata_file_paths)
 
     def load_experiments_metadata(self, metadata_file_paths):
         models_metadata = []
@@ -32,13 +31,13 @@ class ExperimentsController(object):
                 models_metadata.append(model_metadata)
         return models_metadata
 
-    def copy_metadata_files(self):
+    def copy_metadata_files(self, metadata_file_paths):
         experiments_metadata_path = Path(f"{self.experiment_path}/experiments_metadata")
         experiments_metadata_path.mkdir(parents=True, exist_ok=True)
-        for experiment_metadata, metadata_file_path in zip(self.experiments_metadata, self.metadata_file_paths):
+        for experiment_metadata, metadata_file_path in zip(self.experiments_metadata, metadata_file_paths):
             file_name = metadata_file_path.split("/")[-1]
             with open(f"{experiments_metadata_path}/{file_name}", 'w') as fp:
-                json.dump(experiment_metadata, fp)
+                json.dump(experiment_metadata, fp, indent=4)
 
     def save_experiments(self, ckpt_names=None):
         if ckpt_names is None:
@@ -64,8 +63,17 @@ class ExperimentsController(object):
 
         return all_experiment_outputs, all_experiment_losses
 
-    def train_in_sequence(self, all_inps, all_labels):
-        pass
+    def val_in_parallel(self, inp, label):
+        all_experiment_outputs = {}
+        all_experiment_losses = {}
+        for experiment in self.experiments:
+            output, loss = experiment.val_step(inp, label)
+            all_experiment_outputs[experiment.name] = output
+            all_experiment_losses[experiment.name] = loss
+
+        return all_experiment_outputs, all_experiment_losses
+    # def train_in_sequence(self, all_inps, all_labels):
+    #     pass
 
 
 
