@@ -1,0 +1,15 @@
+{
+    "id": "some_random_id",
+    "model_name": "QSNet",
+    "model_parameters": {
+        "dropout_rate": 0.5
+    },
+    "optimizer_name": "ADAM",
+    "optimizer_parameters": {
+        "lr": 0.0005,
+        "weight_decay": 0.000005
+    },
+    "loss_function_name": "BCELoss",
+    "loss_function_parameters": {},
+    "output_transform": "sigmoid"
+}

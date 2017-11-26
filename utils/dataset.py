@@ -23,7 +23,7 @@ def create_train_val_dataloaders(data_fp, train_size=0.8,  batch_size=128):
     # but more importantly it gets rid of CopyWarning error
     train_df = deepcopy(train_df)
     val_df = deepcopy(val_df)
-    train_loader = create_dataloader(train_df, batch_size=batch_size)
+    train_loader = create_dataloader(train_df, is_train=True, batch_size=batch_size)
     val_loader = create_dataloader(val_df, is_train=False, batch_size=batch_size)
     return train_loader, val_loader
 
@@ -44,15 +44,22 @@ class IcebergDataset(torch.utils.data.Dataset):
         img, target, ids = self.preprocess_data(df)
         self.img = img
         self.target = target
-        # self.data = TensorDataset(train, target)
         self.ids = ids
         self.is_train = is_train
-        self.transform = transforms.Compose([
-            transforms.ToPILImage(),
-            # transforms.RandomCrop(60),
-            # transforms.RandomHorizontalFlip(),
-            transforms.ToTensor()
-        ])
+        if is_train:
+            self.transform = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.RandomCrop(60),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor()
+            ])
+        else:
+            self.transform = transforms.Compose([
+                transforms.ToPILImage(),
+                # transforms.RandomCrop(60),
+                # transforms.RandomHorizontalFlip(),
+                transforms.ToTensor()
+            ])
 
     def preprocess_data(self, data):
         logging.info("Preprocessing data ...")
@@ -82,10 +89,6 @@ class IcebergDataset(torch.utils.data.Dataset):
         id = data['id'].tolist()
         return img_uint8, target, id
 
-    # def convert_train_to_tensor(self, train):
-    #     train = np.array(train, dtype=np.float32)
-    #     return torch.from_numpy(train)
-
     def convert_target_to_tensor(self, target):
         target = np.expand_dims(target, 1)  # Must be reshaped for BCE loss
         return torch.from_numpy(target).type(torch.FloatTensor) # Must be float for BCE loss
@@ -94,8 +97,4 @@ class IcebergDataset(torch.utils.data.Dataset):
         return len(self.img)
 
     def __getitem__(self, i):
-        # if self.is_train:
-        #     return (self.transform(self.img[i]), self.target[i]), self.ids[i]
-        # else:
-        # return (self.img[i], self.target[i]), self.ids[i]
         return (self.transform(self.img[i]), self.target[i]), self.ids[i]

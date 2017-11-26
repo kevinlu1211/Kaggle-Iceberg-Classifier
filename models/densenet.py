@@ -84,6 +84,7 @@ class DenseNet(nn.Module):
         return output
 
 class DenseLayer(nn.Sequential):
+
     def __init__(self, n_input_features, k, bn_size, drop_prob, bias=False):
         super(DenseLayer, self).__init__()
         self.drop_prob = drop_prob

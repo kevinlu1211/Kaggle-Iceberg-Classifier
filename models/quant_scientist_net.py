@@ -6,10 +6,10 @@ from torch.autograd import Variable
 
 # This class is adapted from: https://www.kaggle.com/solomonk/pytorch-gpu-cnn-bceloss-with-predictions
 class Net(nn.Module):
-    def __init__(self, input_shape=(3, 75, 75)):
+    def __init__(self, dropout_rate, input_shape=(3, 75, 75)):
         super(Net, self).__init__()
         block = BasicBlock
-        base_dropout = 0.5
+        base_dropout = dropout_rate
 
         self.block0 = NetworkBlock(block, n_layers=1, in_channel=input_shape[0], out_channel=32,
                                    kernel_size=5, stride=1, dropout_prob=base_dropout)
