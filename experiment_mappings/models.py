@@ -1,5 +1,5 @@
-import models
+from src.models import DenseNet, QSNet
 models = {
-    "DenseNet": models.DenseNet,
-    "QSNet": models.QSNet
+    "DenseNet": DenseNet,
+    "QSNet": QSNet
 }

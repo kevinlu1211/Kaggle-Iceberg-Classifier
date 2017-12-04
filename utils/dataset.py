@@ -7,6 +7,8 @@ from copy import deepcopy
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from torch.utils.data import TensorDataset, DataLoader
+import sklearn
+
 use_cuda = torch.cuda.is_available()
 
 
@@ -19,8 +21,6 @@ def create_train_val_dataloaders(data_fp, train_size=0.8,  batch_size=128):
     data = load_data(data_fp)
     train_df, val_df = train_test_split(data, train_size=train_size)
 
-    # Deep copy the views of the df so that changes in the original df won't affect the current df
-    # but more importantly it gets rid of CopyWarning error
     train_df = deepcopy(train_df)
     val_df = deepcopy(val_df)
     train_loader = create_dataloader(train_df, is_train=True, batch_size=batch_size)
@@ -33,9 +33,9 @@ def create_dataloader_from_path(data_fp, is_train=True, batch_size=64):
     dataset = IcebergDataset(df, is_train=is_train)
     return DataLoader(dataset, batch_size=batch_size)
 
-def create_dataloader(df, is_train=True, batch_size=64):
+def create_dataloader(df, is_train=True, shuffle=True, batch_size=64):
     dataset = IcebergDataset(df, is_train=is_train)
-    return DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
 
 class IcebergDataset(torch.utils.data.Dataset):
@@ -93,8 +93,13 @@ class IcebergDataset(torch.utils.data.Dataset):
         target = np.expand_dims(target, 1)  # Must be reshaped for BCE loss
         return torch.from_numpy(target).type(torch.FloatTensor) # Must be float for BCE loss
 
+    def shuffle_data(self):
+        self.img, self.target, self.ids = sklearn.utils.shuffle(self.img, self.target, self.ids, n_samples=None)
+
     def __len__(self):
         return len(self.img)
 
     def __getitem__(self, i):
-        return (self.transform(self.img[i]), self.target[i]), self.ids[i]
+        return {"input": self.transform(self.img[i]),
+                "label": self.target[i],
+                "id": self.ids[i]}

@@ -5,74 +5,45 @@ import os
 
 
 class Experiment(object):
-    def __init__(self, metadata, model, output_transformation, loss_function, optimizer, use_cuda):
-        self.metadata = metadata
-        if use_cuda:
-            self.model = model.cuda()
-            self.output_transformation = output_transformation.cuda()
-        else:
-            self.model = model
-            self.output_transformation = output_transformation
+    def __init__(self, n_epochs, data_source_delegate, trainer_delegate,
+                 model, output_transformation, loss_function, optimizer):
+        self.n_epochs = n_epochs
+        self.data_source_delegate = data_source_delegate
+        self.trainer_delegate = trainer_delegate
+        self.model = model
+        self.output_transformation = output_transformation
         self.loss_function = loss_function
         self.optimizer = optimizer
-        self.use_cuda = use_cuda
         self.experiment_outputs = []
         self.experiment_losses = []
 
+
     @property
     def name(self):
-        return f"{self.metadata['model_name']}-{self.metadata['id']}"
+        return f"{self.config['model_name']}-{self.config['id']}"
 
-    def train_step(self, inp, label):
-        if self.use_cuda:
-            inp_data, label = Variable(inp).cuda(), Variable(label).cuda()
-        else:
-            inp_data, label = Variable(inp), Variable(label)
-        self.model.train()
-        model_output = self.model(inp_data)
+    def run(self):
+        for dataset in self.data_source_delegate.retrieve_dataset():
+            for epoch in range(self.n_epochs):
+                train, val = self.trainer_delegate.on_epoch_start(dataset)
+                for data in train:
+                    model_input = self.trainer_delegate.create_model_input(data)
+                    model_output = self.trainer_delegate.create_model_output(model_input, self.model)
+                    transformed_output = self.trainer_delegate.apply_output_transformation(model_output,
+                                                                                           self.output_transformation)
+                    labels = self.trainer_delegate.create_data_labels(data)
+                    model_loss = self.trainer_delegate.calculate_loss(self.loss_function, transformed_output, labels, mode="TRAIN")
+                    self.trainer_delegate.apply_backward_pass(self.optimizer, model_loss, self.model)
 
-        # TODO: Justify whether or not this hook is needed, maybe there isn't a need as we could simply do this in the
-        # TODO: model definition
-        # Transform the output here as we will get unnormalized probailities from our models
-        # since we don't want our models to be coupled with the data
-        transformed_output = self.output_transformation(model_output) if self.output_transformation \
-                                                                            else model_output
-        model_loss = self.loss_function(transformed_output, label)
-        self.optimizer.zero_grad()
-        model_loss.backward()
-        self.optimizer.step()
+                self.trainer_delegate.on_finish_train(self.model, epoch)
 
-        return transformed_output, model_loss
+                for data in val:
+                    model_input = self.trainer_delegate.create_model_input(data)
+                    model_output = self.trainer_delegate.create_model_output(model_input, self.model)
+                    transformed_output = self.trainer_delegate.apply_output_transformation(model_output,
+                                                                                           self.output_transformation)
+                    labels = self.trainer_delegate.create_data_labels(data)
+                    model_loss = self.trainer_delegate.calculate_loss(self.loss_function, transformed_output, labels, mode="EVAL")
 
-    def val_step(self, inp, label):
-        if self.use_cuda:
-            inp_data, label = Variable(inp).cuda(), Variable(label).cuda()
-        else:
-            inp_data, label = Variable(inp), Variable(label)
-        self.model.eval()
-        model_output = self.model(inp_data)
-        transformed_output = self.output_transformation(model_output) if self.output_transformation \
-                                                                            else model_output
-        model_loss = self.loss_function(transformed_output, label)
-        return transformed_output, model_loss
-
-    def save_experiment(self, experiment_path, ckpt_name):
-
-        assert ckpt_name is not None
-        model_id = self.metadata["id"]
-        models_checkpoint_folder_path = Path(f"{experiment_path}/saved_models/{model_id}")
-        models_checkpoint_folder_path.mkdir(parents=True, exist_ok=True)
-        torch.save(self.model.state_dict(), os.fspath(f"{models_checkpoint_folder_path}/{ckpt_name}"))
-
-    def load_experiment(self, experiment_path, ckpt_name, for_eval):
-
-        assert ckpt_name is not None
-        model_id = self.metadata["id"]
-        model_checkpoint_path = f"{experiment_path}/saved_models/{model_id}/{ckpt_name}"
-        self.model.load_state_dict(f"{model_checkpoint_path}")
-        if for_eval:
-            self.model.eval()
-
-
-
+                self.trainer_delegate.on_finish_validation(self.model, epoch)
 
