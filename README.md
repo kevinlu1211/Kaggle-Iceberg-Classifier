@@ -10,7 +10,7 @@ detecting whether the picture has a iceberg or a ship
 
     - [X] Implement the "Model" part of the framework which has the training loop
     - [X] Implement the "Controller" part of the framework which has hooks into the training process
-    - [ ] Implement pipeline for K-fold cross validation
+    - [ ] Implement the hooks for K-fold cross validation
     - [X] Do some research in regards to how best to store hyperparameter configs
 
 
