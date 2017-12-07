@@ -1,7 +1,10 @@
 # Kaggle Iceberg Classifier 
 
 This repository is a competition hosted on [Kaggle](https://www.kaggle.com/c/statoil-iceberg-classifier-challenge) for 
-detecting whether the picture has a iceberg or a ship
+detecting whether the picture has a iceberg or a ship.
+
+Currently following a [GitFlow](https://datasift.github.io/gitflow/IntroducingGitFlow.html) branching model, so 
+features being actively developed are on the `origin/features` branches
 
 #### High Priority
     
