@@ -1,4 +1,5 @@
 import os
+from torch.nn import functional as F
 import pandas as pd
 import argparse
 from tqdm import tqdm
@@ -7,7 +8,7 @@ from time import strftime
 from torch.autograd import Variable
 from utils.dataset import create_dataloader_from_path
 from models.quant_scientist_net import Net
-use_cuda = torch.cuda.is_available()
+use_cuda = False
 
 
 def main():
@@ -41,6 +42,7 @@ def evaluate(model, test_dataloader):
             img, label = Variable(img), Variable(label)
 
         out = model(img)
+        out = F.sigmoid(out)
         probs.extend(out.view(-1).data.numpy().tolist())
         ids.extend(id)
     write_to_csv(ids, probs)
