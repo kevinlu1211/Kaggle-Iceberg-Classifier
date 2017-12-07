@@ -1,7 +1,6 @@
 import argparse
 import logging
 import time
-import glob as glob
 from src.experiment_mappings \
     import model_lookup, \
     loss_function_lookup, \
@@ -10,10 +9,7 @@ from src.experiment_mappings \
     data_source_delegates_lookup, \
     trainer_delegates_lookup
 
-from src.experiment import ExperimentFactory
-
-import torch
-
+from src.Experiment import ExperimentFactory
 
 def main():
     experiment_factory = ExperimentFactory(model_lookup, loss_function_lookup, optimizer_lookup,

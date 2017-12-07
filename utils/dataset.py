@@ -41,10 +41,9 @@ def create_dataloader(df, is_train=True, shuffle=True, batch_size=64):
 class IcebergDataset(torch.utils.data.Dataset):
     def __init__(self, df, is_train=True):
         super().__init__()
-        img, target, ids = self.preprocess_data(df)
-        self.img = img
-        self.target = target
-        self.ids = ids
+        self.img = df['input']
+        self.target = df['label']
+        self.ids = df['id']
         self.is_train = is_train
         if is_train:
             self.transform = transforms.Compose([
@@ -61,45 +60,14 @@ class IcebergDataset(torch.utils.data.Dataset):
                 transforms.ToTensor()
             ])
 
-    def preprocess_data(self, data):
-        logging.info("Preprocessing data ...")
-        logging.info("Reshaping input images ...")
-        data['band_1_rs'] = data['band_1'].apply(lambda x: np.array(x).reshape(75, 75))
-        data['band_2_rs'] = data['band_2'].apply(lambda x: np.array(x).reshape(75, 75))
-        data['band_3_rs'] = (data['band_1_rs'] + data['band_2_rs'])/2
-        data['inc_angle'] = pd.to_numeric(data['inc_angle'], errors='coerce')
-
-        band_1 = np.concatenate([im for im in data['band_1_rs']]).reshape(-1, 75, 75)
-        band_2 = np.concatenate([im for im in data['band_2_rs']]).reshape(-1, 75, 75)
-        band_3 = np.concatenate([im for im in data['band_3_rs']]).reshape(-1, 75, 75)
-
-        logging.info("Converting training data to Tensors ...")
-
-        # Batch, Height, Width, Channel
-        img = np.stack([band_1, band_2, band_3], axis=3)
-        img_max = np.max(img, keepdims=True, axis=(1, 2))
-        img_min = np.min(img, keepdims=True, axis=(1, 2))
-        max_min_diff = img_max - img_min
-        img_uint8 = (((img - img_min)/max_min_diff) * 255).astype(np.uint8)
-
-        if 'is_iceberg' in data:
-            target = self.convert_target_to_tensor(data['is_iceberg'].values)
-        else:
-            target = self.convert_target_to_tensor([-1] * data.shape[0])
-        id = data['id'].tolist()
-        return img_uint8, target, id
-
     def convert_target_to_tensor(self, target):
         target = np.expand_dims(target, 1)  # Must be reshaped for BCE loss
-        return torch.from_numpy(target).type(torch.FloatTensor) # Must be float for BCE loss
-
-    def shuffle_data(self):
-        self.img, self.target, self.ids = sklearn.utils.shuffle(self.img, self.target, self.ids, n_samples=None)
+        return torch.from_numpy(target).type(torch.FloatTensor)  # Must be float for BCE loss
 
     def __len__(self):
         return len(self.img)
 
     def __getitem__(self, i):
         return {"input": self.transform(self.img[i]),
-                "label": self.target[i],
+                "label": self.convert_target_to_tensor(self.target[i]),
                 "id": self.ids[i]}

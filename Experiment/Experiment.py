@@ -22,7 +22,6 @@ class Experiment(object):
     def run(self):
         self.trainer_delegate.on_experiment_start()
         for data_split in self.data_source_delegate.retrieve_dataset():
-            self.trainer_delegate.on_new_data_split(data_split)
             for epoch in range(self.n_epochs):
                 train, val = self.trainer_delegate.on_epoch_start(data_split)
                 for data in tqdm(train):
