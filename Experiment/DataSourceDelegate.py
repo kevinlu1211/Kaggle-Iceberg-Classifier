@@ -1,10 +1,13 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from src.utils import create_dataloader
+from .AbstractDataSourceDelegate import AbstractDataSourceDelegate
 
 
-class DataSourceDelegate(object):
-    def __init__(self, training_data_path):
+class DataSourceDelegate(AbstractDataSourceDelegate):
+    def __init__(self, training_data_path, batch_size):
         self.training_data_path = training_data_path
+        self.batch_size = batch_size
         self.data = None
         self.setup()
 
@@ -41,11 +44,15 @@ class DataSourceDelegate(object):
         return split_data
 
     def retrieve_dataset(self):
-        """
-        This function returns the an element of the split dataset
-        :return:
-        """
-        raise NotImplementedError("The delegate must implement this method")
+        for d in self.data:
+            train_df, val_df = d
+            train_dataloader = create_dataloader(train_df, is_train=True,
+                                                 batch_size=self.batch_size)
+            val_dataloader = create_dataloader(val_df, is_train=False,
+                                               shuffle=False,
+                                               batch_size=self.batch_size)
+            yield {"train": train_dataloader,
+                   "val": val_dataloader}
 
 
 

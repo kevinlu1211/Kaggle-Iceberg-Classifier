@@ -1,0 +1,21 @@
+{
+  "id": "qsnet",
+  "model_name": "QSNet",
+  "model_parameters": {
+      "dropout_rate": 0.5
+  },
+  "optimizer_name": "ADAM",
+  "optimizer_parameters": {
+      "lr": 0.00005,
+      "weight_decay": 0.00005
+  },
+  "loss_function_name": "BCELoss",
+  "loss_function_parameters": {},
+  "output_transformation_name": "sigmoid",
+  "trainer_delegate_name": "QSNet",
+  "data_source_delegate_name": "QSNet",
+  "data_source_delegate_parameters": {
+    "batch_size": 64
+  },
+  "n_epochs": 30
+}

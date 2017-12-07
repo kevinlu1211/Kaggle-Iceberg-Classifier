@@ -1,6 +1,7 @@
 from copy import deepcopy
 import json
 from .Experiment import Experiment
+from src.utils import cudarize
 
 
 class ExperimentFactory(object):
@@ -24,7 +25,7 @@ class ExperimentFactory(object):
 
     def __init__(self, model_lookup, loss_function_lookup,
                  optimizer_lookup, output_transformation_lookup, data_source_delegate_lookup,
-                 trainer_delegate_lookup, use_cuda):
+                 trainer_delegate_lookup):
 
         self.model_lookup = model_lookup
         self.loss_function_lookup = loss_function_lookup
@@ -32,7 +33,6 @@ class ExperimentFactory(object):
         self.output_transformation_lookup = output_transformation_lookup
         self.data_source_delegate_lookup = data_source_delegate_lookup
         self.trainer_delegate_lookup = trainer_delegate_lookup
-        self.use_cuda = use_cuda
 
     def create_experiment(self, experiment_config_path, experiment_save_path, training_data_path):
 
@@ -81,16 +81,13 @@ class ExperimentFactory(object):
         # Create the trainer delegate
         trainer_delegate_name = experiment_config.get("trainer_delegate_name")
         trainer_delegate_parameters = experiment_config.get("trainer_delegate_parameters", {})
+        trainer_delegate_parameters["id"] = experiment_config.get("id")
         trainer_delegate_parameters["experiment_save_path"] = experiment_save_path
         trainer_delegate_ptr = self.trainer_delegate_lookup.get(trainer_delegate_name)
         trainer_delegate = ExperimentFactory.create_component(trainer_delegate_ptr,
-                                                           trainer_delegate_parameters)
-        if self.use_cuda:
-            self.model = model.cuda()
-            self.output_transformation = output_transformation.cuda()
-        else:
-            self.model = model
-            self.output_transformation = output_transformation
+                                                              trainer_delegate_parameters)
+        model = cudarize(model)
+        output_transformation = cudarize(output_transformation)
 
         return Experiment(experiment_config.get("n_epochs"), data_source_delegate,
                           trainer_delegate, model, output_transformation, loss_function, optimizer)

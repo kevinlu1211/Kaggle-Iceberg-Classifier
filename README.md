@@ -1,15 +1,17 @@
 # Kaggle Iceberg Classifier 
 
+This repository is a competition hosted on [Kaggle](https://www.kaggle.com/c/statoil-iceberg-classifier-challenge) for 
+detecting whether the picture has a iceberg or a ship
 
 #### High Priority
-- [ ] Plan/Implement training/testing pipeline for ensembling networks
-    - [ ] Read up about Gang of Four Patterns
-    - [ ] Create UML diagram for pipeline
-    - [ ] Should probably write an interface that the forces the network to conform to some output format
     
-- [ ] Implement pipeline for K-fold cross validation
+- [ ] Implement a framework for training neural networks and easy ensembling, using an architecture similar to Model, 
+        View, Controller design pattern in application/web dev without the View
 
-- [ ] Do some research in regards to how best to store hyperparameter configs
+    - [X] Implement the "Model" part of the framework which has the training loop
+    - [X] Implement the "Controller" part of the framework which has hooks into the training process
+    - [ ] Implement pipeline for K-fold cross validation
+    - [X] Do some research in regards to how best to store hyperparameter configs
 
 
 #### Medium Priority
