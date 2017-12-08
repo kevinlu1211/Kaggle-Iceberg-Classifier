@@ -1,17 +1,64 @@
 # Kaggle Iceberg Classifier 
 
 This repository is a competition hosted on [Kaggle](https://www.kaggle.com/c/statoil-iceberg-classifier-challenge) for 
-detecting whether the picture has a iceberg or a ship
+detecting whether the picture has a iceberg or a ship.
+
+Currently following a [GitFlow](https://datasift.github.io/gitflow/IntroducingGitFlow.html) branching model, so 
+features being actively developed are on the `origin/features` branches
+
+#### Experiment Framework
+This is framework in the `Experiment` folder that allows for faster iterations on training and optimizing neural network 
+architectures. This is how it works:
+
+1. Provide a configuration file which is in JSON format, this file has all the hyperparameters for the model, the batch
+size being used, basically, all the things that are configurable are stored here. An example can be found in
+`experiment_config/experiment_1/experiment_1_qsnet.json` but for convenience this is what is looks like:
+```
+{
+  "id": "qsnet",
+  "model_name": "QSNet",
+  "model_parameters": {
+      "dropout_rate": 0.5
+  },
+  "optimizer_name": "ADAM",
+  "optimizer_parameters": {
+      "lr": 0.00005,
+      "weight_decay": 0.00005
+  },
+  "loss_function_name": "BCELoss",
+  "loss_function_parameters": {},
+  "output_transformation_name": "sigmoid",
+  "trainer_delegate_name": "QSNet",
+  "data_source_delegate_name": "QSNet",
+  "data_source_delegate_parameters": {
+    "batch_size": 64
+  },
+  "n_epochs": 5
+}
+```
+
+2. The ExperimentFactory located in `Experiment/ExperimentFactory` reads these JSON configuration files and creates
+an experiment which has all the information that is needed to run a training process end-to-end. This is done by using 
+the files in `experiment_mappings` which provides a lookup for the model architecture, the trainer and data source 
+delegates, and anything else that is configurable in the experiment. For example in `experiment_mappings/models` there 
+is a dictionary that has a key value pair `"QSNet": <reference to QSNet>"`and similarly for the trainer, 
+and data source delegates.
+
+3. The data source, and trainer delegate has various hooks during the data preprocessing and training process which can 
+be found in the `Experiment/AbstractDataSourceDelegate` and `Experiment/AbstractTrainerDelegate` classes
+
 
 #### High Priority
     
-- [ ] Implement a framework for training neural networks and easy ensembling, using an architecture similar to Model, 
-        View, Controller design pattern in application/web dev without the View
+- [ ] Implement a framework for easier optimization of various neural networks architectures, random parameter 
+search and easy ensembling
 
-    - [X] Implement the "Model" part of the framework which has the training loop
-    - [X] Implement the "Controller" part of the framework which has hooks into the training process
-    - [ ] Implement the hooks for K-fold cross validation
+    - [X] Implement the part of the framework which has the core of the training process
+    - [X] Implement the part of the framework which has hooks into the training process
+    - [X] Implement the hooks for K-fold cross validation
     - [X] Do some research in regards to how best to store hyperparameter configs
+    - [ ] Write a brief explanation of how it works
+    - [X]
 
 
 #### Medium Priority
@@ -29,6 +76,8 @@ concatentate that representation with the ones that use all the channels
 
 - [ ] Read and understand the incidence angle and see if we can incorporate 
 some prior information before feeding it to network
+
+- [ ] Try using more engineered features such as Wavelets
 
 
 #### Low Priority
