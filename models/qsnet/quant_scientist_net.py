@@ -14,11 +14,11 @@ class Net(nn.Module):
         self.block0 = NetworkBlock(block, n_layers=1, in_channel=input_shape[0], out_channel=32,
                                    kernel_size=5, stride=1, dropout_prob=base_dropout)
         self.block1 = NetworkBlock(block, n_layers=1, in_channel=32, out_channel=64,
-                                   kernel_size=3, stride=1, dropout_prob=base_dropout-0.3)
+                                   kernel_size=3, stride=1, dropout_prob=base_dropout-0.2)
         self.block2 = NetworkBlock(block, n_layers=1, in_channel=64, out_channel=128,
+                                   kernel_size=3, stride=1, dropout_prob=base_dropout-0.25)
+        self.block3 = NetworkBlock(block, n_layers=1, in_channel=128, out_channel=256,
                                    kernel_size=3, stride=1, dropout_prob=base_dropout-0.3)
-        # self.block3 = NetworkBlock(block, n_layers=1, in_channel=512, out_channel=2048,
-        #                            kernel_size=3, stride=1, dropout_prob=base_dropout-0.3)
 
         self.features = nn.Sequential(
             self.block0,

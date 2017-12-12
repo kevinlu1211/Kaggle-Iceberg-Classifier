@@ -1,7 +1,8 @@
-from experiment import DataSourceDelegate
-
+from src.Experiment import DataSourceDelegate
 
 class DenseNetDataSourceDelegate(DataSourceDelegate):
 
-    def __init__(self, config, use_cuda):
-        super().__init__(config, use_cuda)
+    def __init__(self, training_data_path, testing_data_path, batch_size):
+        super().__init__(training_data_path, testing_data_path, batch_size)
+
+

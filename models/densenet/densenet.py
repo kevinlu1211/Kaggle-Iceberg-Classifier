@@ -12,8 +12,8 @@ class DenseLayer(nn.Sequential):
         self.drop_prob = drop_prob
         self.add_module('bn1', nn.BatchNorm2d(n_input_features))
         self.add_module('relu1', nn.ReLU())
-        self.add_module('conv.1', nn.Conv2d(n_input_features, k * bn_size,
-                                            kernel_size=1, stride=1, bias=bias))
+        self.add_module('conv1', nn.Conv2d(n_input_features, k * bn_size,
+                                            kernel_size=1, stride=1, padding=1, bias=bias))
         self.add_module('bn2', nn.BatchNorm2d(k * bn_size))
         self.add_module('relu2', nn.ReLU())
         self.add_module('conv2', nn.Conv2d(k * bn_size, k,
@@ -125,7 +125,7 @@ class TransitionLayer(nn.Sequential):
 
 class DenseNet(nn.Module):
     def __init__(self, growth_rate=16, block_config=(6, 12, 24, 16), n_init_features=32,
-                 bn_size=4, drop_prob=0, n_classes=1, input_shape=(3, 75, 75)):
+                 bn_size=4, dropout_rate=0, n_classes=1, input_shape=(3, 75, 75)):
         super(DenseNet, self).__init__()
 
         # Input layer conv
@@ -136,7 +136,7 @@ class DenseNet(nn.Module):
         )
         n_features = n_init_features
         for i, n_layers in enumerate(block_config):
-            block = DenseBlock(n_layers, n_features, growth_rate, bn_size, drop_prob)
+            block = DenseBlock(n_layers, n_features, growth_rate, bn_size, dropout_rate)
             self.features.add_module(f'denseblock{i+1}', block)
             n_features = n_features + growth_rate * n_layers
             if i != len(block_config) - 1:
