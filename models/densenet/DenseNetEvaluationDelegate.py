@@ -1,15 +1,5 @@
-from src.Experiment import TrainerDelegate
+from src.Experiment import EvaluationDelegate
 
-
-class QSNetTrainerDelegate(TrainerDelegate):
-
+class DenseNetEvaluationDelegate(EvaluationDelegate):
     def __init__(self, experiment_id, experiment_path):
         super().__init__(experiment_id, experiment_path)
-
-
-
-
-
-
-
-

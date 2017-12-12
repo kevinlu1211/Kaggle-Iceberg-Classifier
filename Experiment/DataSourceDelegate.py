@@ -9,11 +9,13 @@ from .AbstractDataSourceDelegate import AbstractDataSourceDelegate
 
 
 class DataSourceDelegate(AbstractDataSourceDelegate):
-    def __init__(self, training_data_path, batch_size):
+    def __init__(self, training_data_path, testing_data_path, batch_size):
         self.training_data_path = training_data_path
+        self.test_data_path = testing_data_path
         self.batch_size = batch_size
         self.splits = None
-        self.data = None
+        self.training_data = None
+        self.test_data = None
         self.setup()
 
     def _get_data_reader(self, path):
@@ -24,13 +26,16 @@ class DataSourceDelegate(AbstractDataSourceDelegate):
         }.get(file_extension)
 
     def setup(self):
-        data = self.load_data()
-        preprocessed_data = self.preprocess_data(data)
-        self.splits = self.data_split(preprocessed_data)
-        self.data = preprocessed_data
+        training_data = self.load_data(self.training_data_path)
+        preprocessed_training_data = self.preprocess_data(training_data)
+        self.splits = self.data_split(training_data)
+        self.training_data = preprocessed_training_data
+        if self.test_data_path is not None:
+            test_data = self.load_data(self.test_data_path)
+            preprocessed_test_data = self.preprocess_data(test_data)
+            self.test_data = preprocessed_test_data
 
-    def load_data(self):
-        path = self.training_data_path
+    def load_data(self, path):
         assert path is not None
         data_reader = self._get_data_reader(path)
         return data_reader(path)
@@ -78,10 +83,10 @@ class DataSourceDelegate(AbstractDataSourceDelegate):
         folds = KFold(n_splits=5).split(data)
         return folds
 
-    def retrieve_dataset(self):
+    def retrieve_dataset_for_train(self):
         for train_idx, test_idx in self.splits:
-            train_df = self.data.iloc[train_idx]
-            val_df = self.data.iloc[test_idx]
+            train_df = self.training_data.iloc[train_idx].reset_index(drop=True)
+            val_df = self.training_data.iloc[test_idx].reset_index(drop=True)
             train_dataloader = create_dataloader(train_df, is_train=True,
                                                  batch_size=self.batch_size)
             val_dataloader = create_dataloader(val_df, is_train=False,
@@ -89,6 +94,13 @@ class DataSourceDelegate(AbstractDataSourceDelegate):
                                                batch_size=self.batch_size)
             yield {"train": train_dataloader,
                    "val": val_dataloader}
+
+    def retrieve_dataset_for_test(self):
+        test_df = self.test_data
+        test_dataloader = create_dataloader(test_df, is_train=False,
+                                            shuffle=False,
+                                            batch_size=self.batch_size)
+        yield {"test": test_dataloader}
 
 
 

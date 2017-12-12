@@ -1,4 +1,3 @@
-import pandas as pd
 from abc import ABC, abstractmethod
 
 class AbstractDataSourceDelegate(ABC):
@@ -20,7 +19,11 @@ class AbstractDataSourceDelegate(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def retrieve_dataset(self):
+    def retrieve_dataset_for_train(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def retrieve_dataset_for_test(self):
         raise NotImplementedError
 
 

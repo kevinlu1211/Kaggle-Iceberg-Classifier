@@ -12,11 +12,11 @@ class AbstractTrainerDelegate(ABC):
         super().__init__()
 
     @abstractmethod
-    def on_experiment_start(self):
+    def on_experiment_start(self, model):
         pass
 
     @abstractmethod
-    def on_new_data_split(self, data_split):
+    def on_setup_model(self, model):
         pass
 
     @abstractmethod
@@ -40,6 +40,10 @@ class AbstractTrainerDelegate(ABC):
         pass
 
     @abstractmethod
+    def on_model_output(self, model_output):
+        pass
+
+    @abstractmethod
     def calculate_loss(self, loss_function, model_output, labels, mode):
         pass
 
@@ -48,19 +52,7 @@ class AbstractTrainerDelegate(ABC):
         pass
 
     @abstractmethod
-    def on_finish_train(self, model, epoch):
-        pass
-
-    @abstractmethod
-    def on_finish_validation(self, model, epoch):
-        pass
-
-    @abstractmethod
     def on_epoch_end(self):
-        pass
-
-    @abstractmethod
-    def on_end_data_split(self):
         pass
 
     @abstractmethod
