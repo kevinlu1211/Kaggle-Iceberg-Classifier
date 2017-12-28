@@ -3,7 +3,7 @@ import torch
 import logging
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, StratifiedKFold
 from src.utils import create_dataloader
 from .AbstractDataSourceDelegate import AbstractDataSourceDelegate
 
@@ -46,7 +46,7 @@ class DataSourceDelegate(AbstractDataSourceDelegate):
         logging.info("Reshaping input images ...")
         data['band_1_rs'] = data['band_1'].apply(lambda x: np.array(x).reshape(75, 75))
         data['band_2_rs'] = data['band_2'].apply(lambda x: np.array(x).reshape(75, 75))
-        data['band_3_rs'] = (data['band_1_rs'] + data['band_2_rs']) / 2
+        data['band_3_rs'] = data['band_1_rs'] / data['band_2_rs']
         data['inc_angle'] = pd.to_numeric(data['inc_angle'], errors='coerce')
 
         band_1 = np.concatenate([im for im in data['band_1_rs']]).reshape(-1, 75, 75)
@@ -80,7 +80,7 @@ class DataSourceDelegate(AbstractDataSourceDelegate):
         return df
 
     def data_split(self, data):
-        folds = KFold(n_splits=5).split(data)
+        folds = StratifiedKFold(n_splits=3).split(data, data['is_iceberg'])
         return folds
 
     def retrieve_dataset_for_train(self):

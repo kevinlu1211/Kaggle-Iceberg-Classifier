@@ -2,24 +2,25 @@ from tqdm import tqdm
 from copy import deepcopy
 
 class Experiment(object):
-    def __init__(self, n_epochs, data_source_delegate, trainer_delegate, evaluation_delegate,
+
+    def __init__(self, n_epochs, data_source_delegate, trainer_delegate, evaluation_delegate, result_delegate,
                  model, output_transformation, loss_function, optimizer):
         self.n_epochs = n_epochs
         self.evaluation_delegate = evaluation_delegate
         self.data_source_delegate = data_source_delegate
+        self.result_delegate = result_delegate
         self.trainer_delegate = trainer_delegate
         self.model = model
         self.output_transformation = output_transformation
         self.loss_function = loss_function
         self.optimizer = optimizer
 
-
     def train(self):
         self.trainer_delegate.on_experiment_start(self.model)
-        for data_split in self.data_source_delegate.retrieve_dataset_for_train():
+        for fold_num, data_fold in enumerate(self.data_source_delegate.retrieve_dataset_for_train()):
             self.model = self.trainer_delegate.on_setup_model(self.model)
             for epoch in range(self.n_epochs):
-                train, val = self.trainer_delegate.on_epoch_start(data_split)
+                train, val = self.trainer_delegate.on_epoch_start(data_fold)
                 for data in tqdm(train):
                     self.model.train()
                     model_input = self.trainer_delegate.create_model_input(data)
@@ -30,6 +31,7 @@ class Experiment(object):
                     labels = self.trainer_delegate.create_data_labels(data)
                     model_loss = self.trainer_delegate.calculate_loss(self.loss_function, transformed_output,
                                                                       labels, mode="TRAIN")
+                    self.result_delegate.on_model_loss(model_loss, mode="TRAIN")
                     self.trainer_delegate.apply_backward_pass(self.optimizer, model_loss, self.model)
 
                 for data in tqdm(val):
@@ -40,10 +42,11 @@ class Experiment(object):
                                                                                            self.output_transformation)
                     self.trainer_delegate.on_model_output(transformed_output)
                     labels = self.trainer_delegate.create_data_labels(data)
-                    _ = self.trainer_delegate.calculate_loss(self.loss_function, transformed_output,
-                                                             labels, mode="EVAL")
+                    model_loss = self.trainer_delegate.calculate_loss(self.loss_function, transformed_output,
+                                                                      labels, mode="EVAL")
+                    self.result_delegate.on_model_loss(model_loss, mode="EVAL")
 
-                self.trainer_delegate.on_epoch_end(self.model, epoch)
+                self.result_delegate.on_epoch_end(self.model, epoch, fold_num)
         self.trainer_delegate.on_end_experiment()
 
     def test(self):

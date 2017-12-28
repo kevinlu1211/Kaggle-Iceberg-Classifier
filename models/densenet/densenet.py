@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
@@ -6,6 +5,7 @@ from torch.nn import functional as F
 from collections import OrderedDict
 
 
+# Largely referenced from PyTorch source code https://github.com/pytorch/vision/blob/master/torchvision/models/densenet.py
 class DenseLayer(nn.Sequential):
     def __init__(self, n_input_features, k, bn_size, drop_prob, bias=False):
         super(DenseLayer, self).__init__()
@@ -53,7 +53,7 @@ class DenseNet(nn.Module):
         # Input layer conv
         self.features = nn.Sequential(
             OrderedDict([
-                ('conv0', nn.Conv2d(2, n_init_features, kernel_size=5, stride=1))
+                ('conv0', nn.Conv2d(3, n_init_features, kernel_size=5, stride=1))
             ])
         )
         n_features = n_init_features
@@ -128,12 +128,19 @@ class DenseNet(nn.Module):
                  bn_size=4, dropout_rate=0, n_classes=1, input_shape=(3, 75, 75)):
         super(DenseNet, self).__init__()
 
-        # Input layer conv
-        self.features = nn.Sequential(
-            OrderedDict([
-                ('conv0', nn.Conv2d(3, n_init_features, kernel_size=7, stride=1))
-            ])
-        )
+        # Input layer conv paper original
+        # self.features = nn.Sequential(
+        #     OrderedDict([
+        #         ('conv0', nn.Conv2d(3, n_init_features, kernel_size=7, stride=1))
+        #     ])
+        # )
+
+        # (Nearly PyTorch implementation)
+        self.features = nn.Sequential(OrderedDict([
+            ('conv0', nn.Conv2d(3, n_init_features, kernel_size=7, stride=2, bias=False)),
+            ('norm0', nn.BatchNorm2d(n_init_features)),
+            ('relu0', nn.ReLU(inplace=True)),
+        ]))
         n_features = n_init_features
         for i, n_layers in enumerate(block_config):
             block = DenseBlock(n_layers, n_features, growth_rate, bn_size, dropout_rate)
@@ -156,7 +163,8 @@ class DenseNet(nn.Module):
         return n_features
 
     def forward(self, inp):
-        output = self.features(inp)
+        features = self.features(inp)
+        output = F.relu(features, inplace=True)
         output = output.view(output.size(0), -1)
         output = self.classifier(output)
         return output

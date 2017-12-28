@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 
 class AbstractTrainerDelegate(ABC):
 
-    def __init__(self, id, experiment_save_path):
+    def __init__(self, id, study_save_path):
         self.id = id
-        self.experiment_save_path = experiment_save_path
+        self.experiment_save_path = study_save_path
         self.total_training_loss = []
         self.total_validation_loss = []
         self.training_loss_for_epoch = []
@@ -58,13 +58,4 @@ class AbstractTrainerDelegate(ABC):
     @abstractmethod
     def on_end_experiment(self):
         pass
-
-    # def on_load_model(self, experiment_path, ckpt_name, for_eval):
-    #     assert ckpt_name is not None
-    #     model_id = self.metadata["id"]
-    #     model_checkpoint_path = f"{experiment_path}/saved_models/{model_id}/{ckpt_name}"
-    #     self.model.load_state_dict(f"{model_checkpoint_path}")
-    #     if for_eval:
-    #         self.model.eval()
-
 

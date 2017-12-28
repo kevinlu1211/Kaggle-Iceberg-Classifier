@@ -1,4 +1,5 @@
 from src.utils.cuda import cudarize
+from collections import defaultdict, OrderedDict
 import torch
 from torch.autograd import Variable
 import os
@@ -6,16 +7,14 @@ from pathlib import Path
 import numpy as np
 import logging
 from .AbstractTrainerDelegate import AbstractTrainerDelegate
-from copy import deepcopy
-
+import json
 
 class TrainerDelegate(AbstractTrainerDelegate):
 
-    def __init__(self, experiment_id, experiment_path):
+    def __init__(self, experiment_id, study_save_path):
         self.experiment_id = experiment_id
-        self.experiment_path = experiment_path
-        self.total_training_loss = []
-        self.total_validation_loss = []
+        self.study_save_path = study_save_path
+        self.validation_results = defaultdict(OrderedDict)
         self.training_loss_for_epoch = []
         self.validation_loss_for_epoch = []
 
@@ -69,24 +68,25 @@ class TrainerDelegate(AbstractTrainerDelegate):
         model_loss.backward()
         optimizer.step()
 
-    def on_epoch_end(self, model, epoch):
+    def on_epoch_end(self, model, epoch, fold_num):
         avg_loss, = np.mean(np.array(self.training_loss_for_epoch)).cpu().numpy()
         logging.info(f"Training loss for epoch: {epoch} is {avg_loss}")
         avg_loss, = np.mean(np.array(self.validation_loss_for_epoch)).cpu().numpy()
         logging.info(f"Validation loss for epoch: {epoch} is {avg_loss}")
+        self.validation_results[fold_num].update({epoch: avg_loss})
 
-        models_checkpoint_folder_path = Path(f"{self.experiment_path}/{self.experiment_id}/model_checkpoints")
+
+        models_checkpoint_folder_path = Path(
+            f"{self.study_save_path}/{self.experiment_id}/model_checkpoints/{fold_num}")
         models_checkpoint_folder_path.mkdir(parents=True, exist_ok=True)
         torch.save(model.state_dict(), os.fspath(f"{models_checkpoint_folder_path}/{avg_loss}.pth"))
 
-
-    def on_finish_data_split(self):
-        self.total_training_loss.append(self.training_loss_for_epoch)
-        self.total_validation_loss.append(self.validation_loss_for_epoch)
-
     def on_end_experiment(self):
-        pass
 
-
+        # Store avg loss @ each epoch
+        report_path = Path(f"{self.study_save_path}/{self.experiment_id}")
+        report_path.mkdir(parents=True, exist_ok=True)
+        with open(f"{report_path}/report.json", "w") as fp:
+            json.dump(self.validation_results, fp)
 
 

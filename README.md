@@ -51,14 +51,15 @@ be found in the `Experiment/AbstractDataSourceDelegate` and `Experiment/Abstract
 #### High Priority
     
 - [ ] Implement a framework for easier optimization of various neural networks architectures, random parameter 
-search and easy ensembling
+search through genetic algorithm search and easy ensembling
 
     - [X] Implement the part of the framework which has the core of the training process
     - [X] Implement the part of the framework which has hooks into the training process
     - [X] Implement the hooks for K-fold cross validation
     - [X] Do some research in regards to how best to store hyperparameter configs
-    - [ ] Write a brief explanation of how it works
-    - [X]
+    - [ ] Update framework README   
+    - [ ] Implement Breeder class
+    - [ ] Clean up the hooks in TrainerDelegate, as a lot of them aren't needed 
 
 
 #### Medium Priority
