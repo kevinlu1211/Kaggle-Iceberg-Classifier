@@ -30,42 +30,6 @@ class Net(nn.Module):
                                         # nn.Linear(512, 1)
                                         )
 
-    @staticmethod
-    def initialize_random_config():
-        config = dict()
-        config["n_blocks"] = 4
-        prev_out_channels = int(conv[0]["parameters"]["in_channels"])
-        for i in range(int(config['n_blocks'])):
-
-            # Pooling
-            config[f"block_{i}.pooling"] = random.sample(pooling, 1)[0]
-
-            # Non-linearity
-            config[f"block_{i}.non_linearity"] = random.sample(non_linearity, 1)[0]
-
-            # Conv Layer
-            conv_layer_parameters = deepcopy(conv[i]["parameters"])
-            config[f"block_{i}.conv"] = conv[i]
-            n_in_channels = prev_out_channels
-
-            # Sample out_channels
-            n_out_channels = int(np.random.normal(**conv_layer_parameters["out_channels"]))
-            conv_layer_parameters["in_channels"] = n_in_channels
-            conv_layer_parameters["out_channels"] = n_out_channels
-            config[f"block_{i}.conv"].update({"parameters": conv_layer_parameters})
-
-            # Batch Norm
-            config[f"block_{i}.batch_norm"] = {"name": "BatchNorm2d",
-                                                     "parameters": {"num_features": n_in_channels}}
-
-            # Dropout
-            dropout_probs = np.linspace(0, 0.5, 11).tolist()
-            config[f"block_{i}.dropout"] = {"name": "Dropout",
-                                                  "parameters": {"dropout_rate": random.sample(dropout_probs, 1)[0]}
-                                                  }
-            prev_out_channels = n_out_channels
-        return config
-
     def _get_conv_output(self, shape):
         bs = 1
         input = Variable(torch.rand(bs, *shape))

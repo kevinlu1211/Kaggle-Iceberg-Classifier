@@ -16,3 +16,8 @@ convolutions = {
 batch_norm = {
     "BatchNorm2d": torch.nn.BatchNorm2d
 }
+
+dropout = {
+    "Dropout": torch.nn.Dropout
+}
+

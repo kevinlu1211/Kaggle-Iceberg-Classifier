@@ -8,23 +8,23 @@ class AbstractDataSourceDelegate(ABC):
 
     @abstractmethod
     def load_data(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def preprocess_data(self, data):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def data_split(self, data):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def retrieve_dataset_for_train(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def retrieve_dataset_for_test(self):
-        raise NotImplementedError
+        pass
 
 
 

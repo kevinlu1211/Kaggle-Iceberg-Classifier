@@ -16,7 +16,6 @@ class DataSourceDelegate(AbstractDataSourceDelegate):
         self.splits = None
         self.training_data = None
         self.test_data = None
-        self.setup()
 
     def _get_data_reader(self, path):
         file_extension = path.split(".")[-1]
@@ -25,15 +24,18 @@ class DataSourceDelegate(AbstractDataSourceDelegate):
             "json": pd.read_json
         }.get(file_extension)
 
-    def setup(self):
+    def setup_training_data(self):
+        assert self.training_data_path is not None
         training_data = self.load_data(self.training_data_path)
         preprocessed_training_data = self.preprocess_data(training_data)
         self.splits = self.data_split(training_data)
         self.training_data = preprocessed_training_data
-        if self.test_data_path is not None:
-            test_data = self.load_data(self.test_data_path)
-            preprocessed_test_data = self.preprocess_data(test_data)
-            self.test_data = preprocessed_test_data
+
+    def setup_test_data(self):
+        assert self.training_data_path is not None
+        test_data = self.load_data(self.test_data_path)
+        preprocessed_test_data = self.preprocess_data(test_data)
+        self.test_data = preprocessed_test_data
 
     def load_data(self, path):
         assert path is not None
@@ -84,6 +86,9 @@ class DataSourceDelegate(AbstractDataSourceDelegate):
         return folds
 
     def retrieve_dataset_for_train(self):
+        if self.training_data is None:
+            self.setup_training_data()
+
         for train_idx, test_idx in self.splits:
             train_df = self.training_data.iloc[train_idx].reset_index(drop=True)
             val_df = self.training_data.iloc[test_idx].reset_index(drop=True)
@@ -96,6 +101,8 @@ class DataSourceDelegate(AbstractDataSourceDelegate):
                    "val": val_dataloader}
 
     def retrieve_dataset_for_test(self):
+        if self.test_data is None:
+            self.setup_test_data()
         test_df = self.test_data
         test_dataloader = create_dataloader(test_df, is_train=False,
                                             shuffle=False,

@@ -1,14 +1,14 @@
 from tqdm import tqdm
-from copy import deepcopy
+import itertools
 
 class Experiment(object):
 
-    def __init__(self, n_epochs, data_source_delegate, trainer_delegate, evaluation_delegate, result_delegate,
+    def __init__(self, n_epochs, data_source_delegate, trainer_delegate, evaluation_delegate, saver_delegate,
                  model, output_transformation, loss_function, optimizer):
         self.n_epochs = n_epochs
         self.evaluation_delegate = evaluation_delegate
         self.data_source_delegate = data_source_delegate
-        self.result_delegate = result_delegate
+        self.saver_delegate = saver_delegate
         self.trainer_delegate = trainer_delegate
         self.model = model
         self.output_transformation = output_transformation
@@ -31,7 +31,7 @@ class Experiment(object):
                     labels = self.trainer_delegate.create_data_labels(data)
                     model_loss = self.trainer_delegate.calculate_loss(self.loss_function, transformed_output,
                                                                       labels, mode="TRAIN")
-                    self.result_delegate.on_model_loss(model_loss, mode="TRAIN")
+                    self.saver_delegate.on_model_loss(model_loss, mode="TRAIN")
                     self.trainer_delegate.apply_backward_pass(self.optimizer, model_loss, self.model)
 
                 for data in tqdm(val):
@@ -44,13 +44,13 @@ class Experiment(object):
                     labels = self.trainer_delegate.create_data_labels(data)
                     model_loss = self.trainer_delegate.calculate_loss(self.loss_function, transformed_output,
                                                                       labels, mode="EVAL")
-                    self.result_delegate.on_model_loss(model_loss, mode="EVAL")
+                    self.saver_delegate.on_model_loss(model_loss, mode="EVAL")
 
-                self.result_delegate.on_epoch_end(self.model, epoch, fold_num)
+                self.saver_delegate.on_epoch_end(self.model, epoch, fold_num)
         self.trainer_delegate.on_end_experiment()
 
     def test(self):
-        test_data = self.data_source_delegate.retrieve_dataset_for_test()
+        test_data = list(self.data_source_delegate.retrieve_dataset_for_test())[0]
         self.model = self.evaluation_delegate.on_setup_model(self.model)
         test = self.evaluation_delegate.on_test_start(test_data)
         for data in tqdm(test):

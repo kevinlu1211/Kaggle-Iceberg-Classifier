@@ -7,4 +7,4 @@ from .output_transformation import output_transformation as output_transformatio
 from .trainer_delegate import trainer_delegates as trainer_delegates_lookup
 from .data_source_delegate import data_source_delegates as data_source_delegates_lookup
 from .evaluation_delegate import evaluation_delegates as evaluation_delegates_lookup
-from .result_delegate import result_delegates as result_delegates_lookup
+from .saver_delegate import saver_delegates as saver_delegates_lookup

@@ -1,6 +1,6 @@
-from src.Experiment import ResultDelegate
+from src.Experiment import SaverDelegate
 
 
-class QSNetResultDelegate(ResultDelegate):
+class DenseNetSaver(SaverDelegate):
     def __init__(self, experiment_id, study_save_path):
         super().__init__(experiment_id, study_save_path)

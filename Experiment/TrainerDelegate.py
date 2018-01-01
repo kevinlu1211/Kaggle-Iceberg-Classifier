@@ -69,24 +69,9 @@ class TrainerDelegate(AbstractTrainerDelegate):
         optimizer.step()
 
     def on_epoch_end(self, model, epoch, fold_num):
-        avg_loss, = np.mean(np.array(self.training_loss_for_epoch)).cpu().numpy()
-        logging.info(f"Training loss for epoch: {epoch} is {avg_loss}")
-        avg_loss, = np.mean(np.array(self.validation_loss_for_epoch)).cpu().numpy()
-        logging.info(f"Validation loss for epoch: {epoch} is {avg_loss}")
-        self.validation_results[fold_num].update({epoch: avg_loss})
-
-
-        models_checkpoint_folder_path = Path(
-            f"{self.study_save_path}/{self.experiment_id}/model_checkpoints/{fold_num}")
-        models_checkpoint_folder_path.mkdir(parents=True, exist_ok=True)
-        torch.save(model.state_dict(), os.fspath(f"{models_checkpoint_folder_path}/{avg_loss}.pth"))
+        pass
 
     def on_end_experiment(self):
-
-        # Store avg loss @ each epoch
-        report_path = Path(f"{self.study_save_path}/{self.experiment_id}")
-        report_path.mkdir(parents=True, exist_ok=True)
-        with open(f"{report_path}/report.json", "w") as fp:
-            json.dump(self.validation_results, fp)
+        pass
 
 

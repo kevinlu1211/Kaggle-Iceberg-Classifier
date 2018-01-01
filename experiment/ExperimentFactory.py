@@ -26,7 +26,7 @@ class ExperimentFactory(object):
     def __init__(self, model_lookup, loss_function_lookup,
                  optimizer_lookup, output_transformation_lookup,
                  data_source_delegate_lookup, trainer_delegate_lookup,
-                 evaluation_delegate_lookup, result_delegates_lookup):
+                 evaluation_delegate_lookup, saver_delegates_lookup):
 
         self.model_lookup = model_lookup
         self.loss_function_lookup = loss_function_lookup
@@ -35,9 +35,10 @@ class ExperimentFactory(object):
         self.data_source_delegate_lookup = data_source_delegate_lookup
         self.trainer_delegate_lookup = trainer_delegate_lookup
         self.evaluation_delegate_lookup = evaluation_delegate_lookup
-        self.result_delegate_lookup = result_delegates_lookup
+        self.saver_delegate_lookup = saver_delegates_lookup
 
-    def create_experiment(self, experiment_config, study_save_path, training_data_path, testing_data_path):
+    def create_experiment(self, experiment_config, study_save_path,
+                          model_load_path=None, eval_save_path=None):
 
         # Create the model
         model_name = experiment_config.get("model").get("name")
@@ -68,8 +69,6 @@ class ExperimentFactory(object):
         # Create the data delegate
         data_source_delegate_name = experiment_config.get("data_source_delegate").get("name")
         data_source_delegate_parameters = experiment_config.get("data_source_delegate").get("parameters", {})
-        data_source_delegate_parameters["training_data_path"] = training_data_path
-        data_source_delegate_parameters["testing_data_path"] = testing_data_path
         data_source_delegate_ptr = self.data_source_delegate_lookup.get(data_source_delegate_name)
         data_source_delegate = ExperimentFactory.create_component(data_source_delegate_ptr,
                                                                   data_source_delegate_parameters)
@@ -83,29 +82,29 @@ class ExperimentFactory(object):
         trainer_delegate = ExperimentFactory.create_component(trainer_delegate_ptr,
                                                               trainer_delegate_parameters)
 
-        # Create the results delegate
-        result_delegate_name = experiment_config.get("result_delegate").get("name")
-        result_delegate_parameters = experiment_config.get("result_delegate").get("parameters", {})
-        result_delegate_parameters["experiment_id"] = experiment_config["id"]
-        result_delegate_parameters["study_save_path"] = study_save_path
-        result_delegate_ptr = self.result_delegate_lookup.get(result_delegate_name)
-        result_delegate = ExperimentFactory.create_component(result_delegate_ptr,
-                                                             result_delegate_parameters)
+        # Create the savers delegate
+        saver_delegate_name = experiment_config.get("saver_delegate", dict()).get("name")
+        saver_delegate_parameters = experiment_config.get("saver_delegate", dict()).get("parameters", dict())
+        saver_delegate_parameters["experiment_id"] = experiment_config["id"]
+        saver_delegate_parameters["study_save_path"] = study_save_path
+        saver_delegate_ptr = self.saver_delegate_lookup.get(saver_delegate_name)
+        saver_delegate = ExperimentFactory.create_component(saver_delegate_ptr,
+                                                            saver_delegate_parameters)
         # Create the evaluator delegate
         evaluation_delegate = experiment_config.get("evaluation_delegate")
         if evaluation_delegate is not None:
             evaluation_delegate_name = evaluation_delegate.get("name")
             evaluation_delegate_parameters = evaluation_delegate.get("parameters", {})
-            evaluation_delegate_parameters["experiment_id"] = experiment_config["id"]
-            evaluation_delegate_parameters["experiment_path"] = study_save_path
+            evaluation_delegate_parameters["model_load_path"] = model_load_path
+            evaluation_delegate_parameters["eval_save_path"] = eval_save_path
             evaluation_delegate_ptr = self.evaluation_delegate_lookup.get(evaluation_delegate_name)
             evaluation_delegate = ExperimentFactory.create_component(evaluation_delegate_ptr,
-                                                                 evaluation_delegate_parameters)
+                                                                     evaluation_delegate_parameters)
 
         model = cudarize(model)
         output_transformation = cudarize(output_transformation)
 
         return Experiment(experiment_config.get("n_epochs"), data_source_delegate,
-                          trainer_delegate, evaluation_delegate, result_delegate,
+                          trainer_delegate, evaluation_delegate, saver_delegate,
                           model, output_transformation, loss_function, optimizer)
 

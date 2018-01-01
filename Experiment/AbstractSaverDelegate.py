@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
 
-class AbstractResultDelegate(ABC):
+class AbstractSaverDelegate(ABC):
 
     def __init__(self):
         self.training_results = defaultdict(OrderedDict)
