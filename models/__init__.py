@@ -5,6 +5,7 @@ from .qsnet.QSNetEvaluationDelegate import QSNetEvaluationDelegate as QSNetEvalu
 from .qsnet.QSNetSaverDelegate import QSNetSaverDelegate as QSNetSaverDelegate
 
 from .densenet.densenet import DenseNet
+from .densenet.densenet2 import DenseNet2
 from .densenet.DenseNetDataSourceDelegate import DenseNetDataSourceDelegate as DenseNetDataSourceDelegate
 from .densenet.DenseNetTrainerDelegate import DenseNetTrainerDelegate as DenseNetTrainerDelegate
 from .densenet.DenseNetEvaluationDelegate import DenseNetEvaluationDelegate as DenseNetEvaluationDelegate

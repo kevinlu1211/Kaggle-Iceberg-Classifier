@@ -9,10 +9,12 @@ from .AbstractDataSourceDelegate import AbstractDataSourceDelegate
 
 
 class DataSourceDelegate(AbstractDataSourceDelegate):
-    def __init__(self, training_data_path, testing_data_path, batch_size):
+    def __init__(self, training_data_path, testing_data_path, batch_size, splits_to_use, n_splits):
         self.training_data_path = training_data_path
         self.test_data_path = testing_data_path
         self.batch_size = batch_size
+        self.splits_to_use = splits_to_use
+        self.n_splits = n_splits
         self.splits = None
         self.training_data = None
         self.test_data = None
@@ -82,8 +84,8 @@ class DataSourceDelegate(AbstractDataSourceDelegate):
         return df
 
     def data_split(self, data):
-        folds = StratifiedKFold(n_splits=3).split(data, data['is_iceberg'])
-        return folds
+        folds = StratifiedKFold(n_splits=self.n_splits).split(data, data['is_iceberg'])
+        return list(folds)[:self.splits_to_use]
 
     def retrieve_dataset_for_train(self):
         if self.training_data is None:

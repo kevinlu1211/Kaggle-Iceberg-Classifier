@@ -1,5 +1,6 @@
 from .loss_functions import loss_functions as loss_function_lookup
 from .optimizers import optimizers as optimizer_lookup
+from .optimizers import scheduler as scheduler_lookup
 from .models import models as model_lookup
 from .layers import non_linearity as non_linearity_lookup
 from .layers import pooling as pooling_lookup

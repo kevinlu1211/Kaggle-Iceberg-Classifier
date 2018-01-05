@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 
 class AbstractDataSourceDelegate(ABC):
-    def __init__(self, training_data_path):
-        self.training_data_path = training_data_path
-        self.data = None
+    def __init__(self):
+        pass
 
 
     @abstractmethod

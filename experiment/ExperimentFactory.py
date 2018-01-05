@@ -1,7 +1,6 @@
-from pathlib import Path
-import json
 from .Experiment import Experiment
 from src.utils import cudarize
+from uuid import uuid4
 
 
 class ExperimentFactory(object):
@@ -24,22 +23,24 @@ class ExperimentFactory(object):
     """
 
     def __init__(self, model_lookup, loss_function_lookup,
-                 optimizer_lookup, output_transformation_lookup,
+                 optimizer_lookup, scheduler_lookup, output_transformation_lookup,
                  data_source_delegate_lookup, trainer_delegate_lookup,
                  evaluation_delegate_lookup, saver_delegates_lookup):
 
         self.model_lookup = model_lookup
         self.loss_function_lookup = loss_function_lookup
         self.optimizer_lookup = optimizer_lookup
+        self.scheduler_lookup = scheduler_lookup
         self.output_transformation_lookup = output_transformation_lookup
         self.data_source_delegate_lookup = data_source_delegate_lookup
         self.trainer_delegate_lookup = trainer_delegate_lookup
         self.evaluation_delegate_lookup = evaluation_delegate_lookup
         self.saver_delegate_lookup = saver_delegates_lookup
 
-    def create_experiment(self, experiment_config, study_save_path,
+    def create_experiment(self, experiment_config, study_save_path, generation=None,
                           model_load_path=None, eval_save_path=None):
-
+        # Create ID
+        experiment_id = experiment_config.get("id", str(uuid4()))
         # Create the model
         model_name = experiment_config.get("model").get("name")
         model_config = experiment_config.get("model").get("config")
@@ -52,6 +53,17 @@ class ExperimentFactory(object):
         optimizer_parameters["params"] = model.parameters()
         optimizer_ptr = self.optimizer_lookup.get(optimizer_name)
         optimizer = ExperimentFactory.create_component(optimizer_ptr, optimizer_parameters)
+
+        # Create Scheduler
+        scheduler_name = experiment_config.get("scheduler", dict()).get("name")
+        if scheduler_name is not None:
+            scheduler_parameters = experiment_config.get("scheduler", dict()).get("parameters")
+            scheduler_parameters['optimizer'] = optimizer
+            scheduler_ptr = self.scheduler_lookup.get(scheduler_name)
+            scheduler = ExperimentFactory.create_component(scheduler_ptr, scheduler_parameters)
+        else:
+            scheduler = None
+
 
         # Create the loss function
         loss_function_name = experiment_config.get("loss_function").get("name")
@@ -76,7 +88,7 @@ class ExperimentFactory(object):
         # Create the trainer delegate
         trainer_delegate_name = experiment_config.get("trainer_delegate").get("name")
         trainer_delegate_parameters = experiment_config.get("trainer_delegate").get("parameters", {})
-        trainer_delegate_parameters["experiment_id"] = experiment_config["id"]
+        trainer_delegate_parameters["experiment_id"] = experiment_id
         trainer_delegate_parameters["study_save_path"] = study_save_path
         trainer_delegate_ptr = self.trainer_delegate_lookup.get(trainer_delegate_name)
         trainer_delegate = ExperimentFactory.create_component(trainer_delegate_ptr,
@@ -85,8 +97,9 @@ class ExperimentFactory(object):
         # Create the savers delegate
         saver_delegate_name = experiment_config.get("saver_delegate", dict()).get("name")
         saver_delegate_parameters = experiment_config.get("saver_delegate", dict()).get("parameters", dict())
-        saver_delegate_parameters["experiment_id"] = experiment_config["id"]
+        saver_delegate_parameters["experiment_id"] = experiment_id
         saver_delegate_parameters["study_save_path"] = study_save_path
+        saver_delegate_parameters["generation"] = generation
         saver_delegate_ptr = self.saver_delegate_lookup.get(saver_delegate_name)
         saver_delegate = ExperimentFactory.create_component(saver_delegate_ptr,
                                                             saver_delegate_parameters)
@@ -106,5 +119,5 @@ class ExperimentFactory(object):
 
         return Experiment(experiment_config.get("n_epochs"), data_source_delegate,
                           trainer_delegate, evaluation_delegate, saver_delegate,
-                          model, output_transformation, loss_function, optimizer)
+                          model, output_transformation, loss_function, optimizer, scheduler)
 

@@ -4,9 +4,9 @@ import torch
 import numpy as np
 import logging
 from copy import deepcopy
-from sklearn.utils import shuffle
+import sklearn
 from sklearn.model_selection import train_test_split
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import Dataset, DataLoader
 import sklearn
 
 use_cuda = torch.cuda.is_available()
@@ -14,7 +14,7 @@ use_cuda = torch.cuda.is_available()
 
 def load_data(data_fp):
     data = pd.read_json(data_fp)
-    return shuffle(data)
+    return sklearn.utils.shuffle(data)
 
 
 def create_train_val_dataloaders(data_fp, train_size=0.8,  batch_size=128):
@@ -38,7 +38,7 @@ def create_dataloader(df, is_train=True, shuffle=True, batch_size=64):
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
 
-class IcebergDataset(torch.utils.data.Dataset):
+class IcebergDataset(Dataset):
     def __init__(self, df, is_train=True):
         super().__init__()
         self.img = df['input']

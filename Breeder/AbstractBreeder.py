@@ -7,9 +7,5 @@ class AbstractBreeder(ABC):
         self.experiment_factory = experiment_factory
 
     @abstractmethod
-    def create_experiment_config(self):
-        pass
-
-    @abstractmethod
     def start_breeding(self):
         pass

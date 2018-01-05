@@ -85,6 +85,7 @@ from src.ExperimentMappings import layers
 
 
 class InitialBlock(nn.Sequential):
+
     def __init__(self, config):
         super().__init__()
         self.add_module("conv",
@@ -99,6 +100,10 @@ class InitialBlock(nn.Sequential):
                         ExperimentFactory.create_component(
                             layers.non_linearity[config["initial_block.non_linearity_0"]["name"]],
                             config["initial_block.non_linearity_0"]["parameters"]))
+        # self.add_module("pooling",
+        #                 ExperimentFactory.create_component(
+        #                     layers.pooling[config["initial_block.pooling_0"]["name"]],
+        #                     config["initial_block.pooling_0"]["parameters"]))
 
 
 class DenseLayer(nn.Sequential):
@@ -118,10 +123,10 @@ class DenseLayer(nn.Sequential):
                         ExperimentFactory.create_component(
                             layers.convolutions[config[f"{prefix}.conv_0"]["name"]],
                             config[f"{prefix}.conv_0"]["parameters"]))
-        self.add_module("dropout_0",
-                        ExperimentFactory.create_component(
-                            layers.dropout[config[f"{prefix}.dropout_0"]["name"]],
-                            config[f"{prefix}.dropout_0"]["parameters"]))
+        # self.add_module("dropout_0",
+        #                 ExperimentFactory.create_component(
+        #                     layers.dropout[config[f"{prefix}.dropout_0"]["name"]],
+        #                     config[f"{prefix}.dropout_0"]["parameters"]))
         self.add_module("batch_norm_1",
                         ExperimentFactory.create_component(
                             layers.batch_norm[config[f"{prefix}.batch_norm_1"]["name"]],
@@ -134,10 +139,10 @@ class DenseLayer(nn.Sequential):
                         ExperimentFactory.create_component(
                             layers.convolutions[config[f"{prefix}.conv_1"]["name"]],
                             config[f"{prefix}.conv_1"]["parameters"]))
-        self.add_module("dropout_1",
-                        ExperimentFactory.create_component(
-                            layers.dropout[config[f"{prefix}.dropout_1"]["name"]],
-                            config[f"{prefix}.dropout_1"]["parameters"]))
+        # self.add_module("dropout_1",
+        #                 ExperimentFactory.create_component(
+        #                     layers.dropout[config[f"{prefix}.dropout_1"]["name"]],
+        #                     config[f"{prefix}.dropout_1"]["parameters"]))
 
     def forward(self, inp):
         output = super(DenseLayer, self).forward(inp)
@@ -172,6 +177,10 @@ class TransitionLayer(nn.Sequential):
                         ExperimentFactory.create_component(
                             layers.pooling[config[f"{prefix}.pooling_0"]["name"]],
                             config[f"{prefix}.pooling_0"]["parameters"]))
+        self.add_module("dropout_0",
+                        ExperimentFactory.create_component(
+                            layers.dropout[config[f"{prefix}.dropout_0"]["name"]],
+                            config[f"{prefix}.dropout_0"]["parameters"]))
 
 class DenseNet(nn.Module):
     def __init__(self, model_config, input_shape=(3, 75, 75)):
@@ -193,17 +202,16 @@ class DenseNet(nn.Module):
         #                     model_config["initial_block.non_linearity_0"]["parameters"]))
         self.features.add_module("initial_block", InitialBlock(model_config))
         n_features = model_config['n_initial_features']
-        for block_i, n_layers in enumerate(model_config['block_config']):
+        for block_i, n_layers in enumerate(model_config['layers_per_block']):
             block = DenseBlock(model_config, block_i, n_layers)
             self.features.add_module(f"denseblock_{block_i}", block)
             n_features += model_config['growth_rate'] * n_layers
-            if block_i != len(model_config['block_config']) - 1:
+            if block_i != len(model_config['layers_per_block']) - 1:
                 trans = TransitionLayer(model_config, block_i)
                 self.features.add_module(f"transition{block_i}", trans)
                 n_features = n_features // 2
-
-        n_fc = self._get_conv_output(input_shape)
-        self.classifier = nn.Linear(n_fc, 1)
+        self.final_bn = nn.BatchNorm2d(n_features)
+        self.classifier = nn.Linear(n_features, 1)
 
     def _get_conv_output(self, shape):
         bs = 1
@@ -214,7 +222,9 @@ class DenseNet(nn.Module):
 
     def forward(self, inp):
         features = self.features(inp)
-        output = features.view(features.size(0), -1)
+        kernel_size = (features.size()[2], features.size()[3])
+        output = F.avg_pool2d(F.relu(self.final_bn(features)), kernel_size=kernel_size)
+        output = output.view(output.size(0), -1)
         output = self.classifier(output)
         return output
 

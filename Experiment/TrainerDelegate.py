@@ -8,6 +8,7 @@ import numpy as np
 import logging
 from .AbstractTrainerDelegate import AbstractTrainerDelegate
 import json
+import torch.optim.lr_scheduler
 
 class TrainerDelegate(AbstractTrainerDelegate):
 
@@ -63,10 +64,21 @@ class TrainerDelegate(AbstractTrainerDelegate):
             self.validation_loss_for_epoch.append(loss.data)
         return loss
 
-    def apply_backward_pass(self, optimizer, model_loss, model):
+    def update_scheduler(self, validation_loss, scheduler):
+        if scheduler is not None:
+            if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                scheduler.step(validation_loss.data[0])
+            else:
+                scheduler.step()
+        # for param_group in optimizer.param_groups:
+        #     lr = param_group['lr']
+        # print(f"lr: {lr}")
+
+    def apply_backward_pass(self, optimizer, scheduler, model_loss, model):
         optimizer.zero_grad()
         model_loss.backward()
         optimizer.step()
+
 
     def on_epoch_end(self, model, epoch, fold_num):
         pass
