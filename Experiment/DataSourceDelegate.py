@@ -5,10 +5,9 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold, StratifiedKFold
 from src.utils import create_dataloader
-from .AbstractDataSourceDelegate import AbstractDataSourceDelegate
 
 
-class DataSourceDelegate(AbstractDataSourceDelegate):
+class DataSourceDelegate(object):
     def __init__(self, training_data_path, testing_data_path, batch_size):
         self.training_data_path = training_data_path
         self.test_data_path = testing_data_path
@@ -16,6 +15,7 @@ class DataSourceDelegate(AbstractDataSourceDelegate):
         self.splits = None
         self.training_data = None
         self.test_data = None
+
 
     def _get_data_reader(self, path):
         file_extension = path.split(".")[-1]
@@ -82,8 +82,8 @@ class DataSourceDelegate(AbstractDataSourceDelegate):
         return df
 
     def data_split(self, data):
-        folds = StratifiedKFold(n_splits=3).split(data, data['is_iceberg'])
-        return folds
+        folds = StratifiedKFold(n_splits=self.n_splits).split(data, data['is_iceberg'])
+        return folds[]
 
     def retrieve_dataset_for_train(self):
         if self.training_data is None:

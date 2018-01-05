@@ -1,6 +1,4 @@
-from src.models import QSNetEvaluationDelegate
-from src.models import DenseNetEvaluationDelegate
+from src.Experiment import EvaluationDelegate
 evaluation_delegates = {
-    "QSNet": QSNetEvaluationDelegate,
-    "DenseNet": DenseNetEvaluationDelegate
+    "EvaluationDelegate": EvaluationDelegate,
 }

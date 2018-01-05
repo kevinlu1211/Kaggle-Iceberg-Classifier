@@ -1,5 +1,4 @@
-from pathlib import Path
-import json
+from uuid import uuid4
 from .Experiment import Experiment
 from src.utils import cudarize
 
@@ -24,14 +23,12 @@ class ExperimentFactory(object):
     """
 
     def __init__(self, model_lookup, loss_function_lookup,
-                 optimizer_lookup, output_transformation_lookup,
-                 data_source_delegate_lookup, trainer_delegate_lookup,
+                 optimizer_lookup, data_source_delegate_lookup, trainer_delegate_lookup,
                  evaluation_delegate_lookup, saver_delegates_lookup):
 
         self.model_lookup = model_lookup
         self.loss_function_lookup = loss_function_lookup
         self.optimizer_lookup = optimizer_lookup
-        self.output_transformation_lookup = output_transformation_lookup
         self.data_source_delegate_lookup = data_source_delegate_lookup
         self.trainer_delegate_lookup = trainer_delegate_lookup
         self.evaluation_delegate_lookup = evaluation_delegate_lookup
@@ -40,11 +37,14 @@ class ExperimentFactory(object):
     def create_experiment(self, experiment_config, study_save_path,
                           model_load_path=None, eval_save_path=None):
 
+        # Get the experiment id
+        experiment_id = experiment_config.get('experiment_id', str(uuid4()))
+
         # Create the model
         model_name = experiment_config.get("model").get("name")
-        model_config = experiment_config.get("model").get("config")
+        model_config = experiment_config.get("model").get("parameters")
         model_ptr = self.model_lookup[model_name]
-        model = model_ptr(model_config)
+        model = ExperimentFactory.create_component(model_ptr, model_config)
 
         # Create the optimizer
         optimizer_name = experiment_config.get("optimizer").get("name")
@@ -59,13 +59,6 @@ class ExperimentFactory(object):
         loss_function_ptr = self.loss_function_lookup.get(loss_function_name)
         loss_function = ExperimentFactory.create_component(loss_function_ptr, loss_function_parameters)
 
-        # Create the output transformation function
-        output_transformation_name = experiment_config.get("output_transformation").get("name")
-        output_transformation_parameters = experiment_config.get("output_transformation").get("parameters")
-        output_transformation_ptr = self.output_transformation_lookup.get(output_transformation_name)
-        output_transformation = ExperimentFactory.create_component(output_transformation_ptr,
-                                                                   output_transformation_parameters)
-
         # Create the data delegate
         data_source_delegate_name = experiment_config.get("data_source_delegate").get("name")
         data_source_delegate_parameters = experiment_config.get("data_source_delegate").get("parameters", {})
@@ -76,7 +69,7 @@ class ExperimentFactory(object):
         # Create the trainer delegate
         trainer_delegate_name = experiment_config.get("trainer_delegate").get("name")
         trainer_delegate_parameters = experiment_config.get("trainer_delegate").get("parameters", {})
-        trainer_delegate_parameters["experiment_id"] = experiment_config["id"]
+        trainer_delegate_parameters["experiment_id"] = experiment_id
         trainer_delegate_parameters["study_save_path"] = study_save_path
         trainer_delegate_ptr = self.trainer_delegate_lookup.get(trainer_delegate_name)
         trainer_delegate = ExperimentFactory.create_component(trainer_delegate_ptr,
@@ -85,7 +78,7 @@ class ExperimentFactory(object):
         # Create the savers delegate
         saver_delegate_name = experiment_config.get("saver_delegate", dict()).get("name")
         saver_delegate_parameters = experiment_config.get("saver_delegate", dict()).get("parameters", dict())
-        saver_delegate_parameters["experiment_id"] = experiment_config["id"]
+        saver_delegate_parameters["experiment_id"] = experiment_id
         saver_delegate_parameters["study_save_path"] = study_save_path
         saver_delegate_ptr = self.saver_delegate_lookup.get(saver_delegate_name)
         saver_delegate = ExperimentFactory.create_component(saver_delegate_ptr,
@@ -102,9 +95,8 @@ class ExperimentFactory(object):
                                                                      evaluation_delegate_parameters)
 
         model = cudarize(model)
-        output_transformation = cudarize(output_transformation)
 
         return Experiment(experiment_config.get("n_epochs"), data_source_delegate,
                           trainer_delegate, evaluation_delegate, saver_delegate,
-                          model, output_transformation, loss_function, optimizer)
+                          model, loss_function, optimizer)
 

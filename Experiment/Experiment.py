@@ -4,14 +4,13 @@ import itertools
 class Experiment(object):
 
     def __init__(self, n_epochs, data_source_delegate, trainer_delegate, evaluation_delegate, saver_delegate,
-                 model, output_transformation, loss_function, optimizer):
+                 model, loss_function, optimizer):
         self.n_epochs = n_epochs
         self.evaluation_delegate = evaluation_delegate
         self.data_source_delegate = data_source_delegate
         self.saver_delegate = saver_delegate
         self.trainer_delegate = trainer_delegate
         self.model = model
-        self.output_transformation = output_transformation
         self.loss_function = loss_function
         self.optimizer = optimizer
 
@@ -25,8 +24,7 @@ class Experiment(object):
                     self.model.train()
                     model_input = self.trainer_delegate.create_model_input(data)
                     model_output = self.trainer_delegate.create_model_output(model_input, self.model)
-                    transformed_output = self.trainer_delegate.apply_output_transformation(model_output,
-                                                                                           self.output_transformation)
+                    transformed_output = self.trainer_delegate.apply_output_transformation(model_output)
                     self.trainer_delegate.on_model_output(transformed_output)
                     labels = self.trainer_delegate.create_data_labels(data)
                     model_loss = self.trainer_delegate.calculate_loss(self.loss_function, transformed_output,
@@ -38,8 +36,7 @@ class Experiment(object):
                     self.model.eval()
                     model_input = self.trainer_delegate.create_model_input(data)
                     model_output = self.trainer_delegate.create_model_output(model_input, self.model)
-                    transformed_output = self.trainer_delegate.apply_output_transformation(model_output,
-                                                                                           self.output_transformation)
+                    transformed_output = self.trainer_delegate.apply_output_transformation(model_output)
                     self.trainer_delegate.on_model_output(transformed_output)
                     labels = self.trainer_delegate.create_data_labels(data)
                     model_loss = self.trainer_delegate.calculate_loss(self.loss_function, transformed_output,

@@ -1,11 +1,10 @@
-from .AbstractEvaluationDelegate import AbstractEvaluationDelegate
 import torch
 from pathlib import Path
 import pandas as pd
 from glob import glob
 
 
-class EvaluationDelegate(AbstractEvaluationDelegate):
+class EvaluationDelegate(object):
 
     def __init__(self, model_load_path, eval_save_path):
         self.model_load_path = model_load_path

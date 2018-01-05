@@ -1,17 +1,21 @@
-from .AbstractSaverDelegate import AbstractSaverDelegate
 import numpy as np
 import logging
 import os
 import torch
 from pathlib import Path
+from collections import defaultdict, OrderedDict
 
 
-class SaverDelegate(AbstractSaverDelegate):
+class SaverDelegate(object):
 
     def __init__(self, experiment_id, study_save_path):
         super().__init__()
         self.experiment_id = experiment_id
         self.study_save_path = study_save_path
+        self.training_results = defaultdict(OrderedDict)
+        self.validation_results = defaultdict(OrderedDict)
+        self.training_loss_for_epoch = []
+        self.validation_loss_for_epoch = []
 
     def on_model_loss(self, loss, mode):
         if mode == "TRAIN":

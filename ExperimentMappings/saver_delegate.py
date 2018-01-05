@@ -1,6 +1,4 @@
-from src.models import QSNetSaverDelegate
-from src.models import DenseNetSaver
+from src.Experiment import SaverDelegate
 saver_delegates = {
-    "QSNet": QSNetSaverDelegate,
-    "DenseNet": DenseNetSaver
+    "DenseNet": SaverDelegate
 }

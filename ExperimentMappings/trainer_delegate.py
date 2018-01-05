@@ -1,7 +1,4 @@
-from src.models import QSNetTrainerDelegate
-from src.models import DenseNetTrainerDelegate
-
+from src.Experiment import TrainerDelegate
 trainer_delegates = {
-    "QSNet": QSNetTrainerDelegate,
-    "DenseNet": DenseNetTrainerDelegate
+    "DenseNet": TrainerDelegate
 }

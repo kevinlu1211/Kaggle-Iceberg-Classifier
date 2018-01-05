@@ -1,7 +1,6 @@
-from src.models import DenseNet, QSNet
+from src.models import DenseNet
 models = {
-    "DenseNet": DenseNet,
-    "QSNet": QSNet
+    "DenseNet": DenseNet
 }
 
 
