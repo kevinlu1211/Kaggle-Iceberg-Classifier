@@ -1,7 +1,7 @@
 from src.utils.cuda import cudarize
 import torch
 from torch.autograd import Variable
-import torch.functional as F
+import torch.nn.functional as F
 from pathlib import Path
 
 class TrainerDelegate(object):
@@ -9,16 +9,6 @@ class TrainerDelegate(object):
     def __init__(self, experiment_id, study_save_path):
         self.experiment_id = experiment_id
         self.study_save_path = study_save_path
-
-    def on_experiment_start(self, model):
-        # This is done so that the initial weights of the model never change after each CV split
-        pth = Path("tmp")
-        pth.mkdir(parents=True, exist_ok=True)
-        torch.save(model.state_dict(), f"tmp/{self.experiment_id}.pth")
-
-    def on_setup_model(self, model):
-        model.load_state_dict(torch.load(f"tmp/{self.experiment_id}.pth"))
-        return model
 
     def on_epoch_start(self, dataset):
         train = dataset['train']
@@ -39,19 +29,18 @@ class TrainerDelegate(object):
         output = F.sigmoid(model_output)
         return output
 
-
-    def on_model_output(self, model_output):
-        pass
+    def calculate_loss(self, loss_function, model_output, labels):
+        loss = loss_function(model_output, labels)
+        return loss
 
     def apply_backward_pass(self, optimizer, model_loss):
         optimizer.zero_grad()
         model_loss.backward()
         optimizer.step()
 
-    def on_epoch_end(self, model, epoch, fold_num):
-        pass
-
-    def on_end_experiment(self):
-        pass
-
-
+    def update_scheduler(self, validation_loss, scheduler):
+        if scheduler is not None:
+            if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                scheduler.step(validation_loss.data[0])
+            else:
+                scheduler.step()

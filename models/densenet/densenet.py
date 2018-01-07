@@ -35,18 +35,19 @@ class DenseBlock(nn.Sequential):
 
 
 class TransitionLayer(nn.Sequential):
-    def __init__(self, n_input_features, n_output_features):
+    def __init__(self, n_input_features, n_output_features, dropout_rate):
         super(TransitionLayer, self).__init__()
         self.add_module('bn', nn.BatchNorm2d(n_input_features))
         self.add_module('relu', nn.ReLU())
         self.add_module('conv', nn.Conv2d(n_input_features, n_output_features,
                                           kernel_size=1, stride=1, padding=(1, 1)))
         self.add_module('avgpool', nn.AvgPool2d(kernel_size=2, stride=2))
+        self.add_module('dropout', nn.Dropout(p=dropout_rate))
 
 
 class DenseNet(nn.Module):
     def __init__(self, growth_rate=16, block_config=(6, 12, 24, 16), n_init_features=32,
-                 bn_size=4, dropout_rate=0, n_classes=1, input_shape=(3, 75, 75)):
+                 bn_size=4, dropout_rates=0, n_classes=1, input_shape=(3, 75, 75)):
         super(DenseNet, self).__init__()
 
         self.features = nn.Sequential(OrderedDict([
@@ -56,17 +57,21 @@ class DenseNet(nn.Module):
         ]))
         n_features = n_init_features
         for i, n_layers in enumerate(block_config):
-            block = DenseBlock(n_layers, n_features, growth_rate, bn_size, dropout_rate)
+            block_drop_prob = dropout_rates[i]
+            block = DenseBlock(n_layers, n_features, growth_rate, bn_size, block_drop_prob)
             self.features.add_module(f'denseblock{i+1}', block)
             n_features = n_features + growth_rate * n_layers
             if i != len(block_config) - 1:
-                trans = TransitionLayer(n_input_features=n_features, n_output_features=n_features // 2)
+                trans = TransitionLayer(n_input_features=n_features,
+                                        n_output_features=n_features // 2,
+                                        dropout_rate=block_drop_prob)
                 self.features.add_module(f'transition{i+1}', trans)
                 n_features = n_features // 2
 
         self.features.add_module('norm', nn.BatchNorm2d(n_features))
-        n_fc = self._get_conv_output(input_shape)
-        self.classifier = nn.Linear(n_fc, n_classes)
+        self.bn = nn.BatchNorm2d(n_features)
+        # n_fc = self._get_conv_output(input_shape)
+        self.classifier = nn.Linear(n_features, n_classes)
 
     def _get_conv_output(self, shape):
         bs = 1
@@ -77,7 +82,9 @@ class DenseNet(nn.Module):
 
     def forward(self, inp):
         features = self.features(inp)
-        output = features.view(features.size(0), -1)
+        kernel_size = (features.size()[2], features.size()[3])
+        output = F.avg_pool2d(F.relu(self.bn(features)), kernel_size)
+        output = output.view(output.size(0), -1)
         output = self.classifier(output)
         return output
 
