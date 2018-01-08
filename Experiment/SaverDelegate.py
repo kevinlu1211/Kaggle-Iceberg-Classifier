@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from collections import defaultdict, OrderedDict
 
+np.seterr(all='raise')
 
 class SaverDelegate(object):
 
@@ -26,10 +27,13 @@ class SaverDelegate(object):
     def save_results(self, data, model_output, model_loss, mode):
         labels = data['label'].numpy()
         ids = data['id']
+        model_output = model_output.clamp(min=0.0001, max=0.9999)
         try:
             per_data_loss = -(labels * np.log(model_output.data) + (1 - labels) * np.log(1 - model_output.data)).numpy()
             per_data_loss = np.reshape(per_data_loss, -1)
-        except RuntimeWarning:
+            print
+        except Exception as e:
+            print(e)
             print("what?")
         labels = np.reshape(labels, -1)
 

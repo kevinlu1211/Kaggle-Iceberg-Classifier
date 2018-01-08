@@ -12,7 +12,7 @@ from src.ExperimentMappings \
     saver_delegates_lookup
 from src.Experiment import ExperimentFactory
 import json
-
+import itertools
 
 def main():
     with open(opts.experiment_config_path, "r") as fp:
@@ -28,16 +28,19 @@ def main():
                                            saver_delegates_lookup)
 
     # TODO: think of a better way to do this, probably have a separate object to create the config files
-    for lr in experiment_config["optimizer"]["parameters"]["lr"]:
+    lrs = experiment_config["optimizer"]["parameters"]["lr"]
+    weight_decays = experiment_config["optimizer"]["parameters"]["weight_decay"]
+    for lr, weight_decay in itertools.product(*[lrs, weight_decays]):
         new_experiment_config = experiment_config.copy()
         new_experiment_config["optimizer"]["parameters"]["lr"] = lr
+        new_experiment_config["optimizer"]["parameters"]["weight_decay"] = weight_decay
         experiment = experiment_factory.create_experiment(new_experiment_config, opts.study_save_path)
         experiment.train()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--study_save_path", default="../study_results/densenet201")
+    parser.add_argument("--study_save_path", default="../study_results/densenet121_ADAM")
     parser.add_argument("--experiment_config_path", default="../study_configs/densenet_experiment.json")
     parser.add_argument("--logging_level", default="INFO")
     opts = parser.parse_args()
