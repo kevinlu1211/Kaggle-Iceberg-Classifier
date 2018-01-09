@@ -1,0 +1,49 @@
+{
+  "model": {
+    "name": "DenseNet201PyTorch",
+    "model_configuration_name": "DenseNet201PyTorch",
+    "parameters": {
+      "pretrained": true,
+      "n_classes": 1
+    }
+  },
+  "optimizer": {
+    "name": "SGD",
+    "parameters": {
+        "lr": [0.01, 0.003, 0.001, 0.0003, 0.0001, 0.00003]
+      }
+  },
+  "scheduler": {
+    "name": "ReduceLROnPlateau",
+    "parameters": {
+      "verbose": true,
+      "threshold": 0.01,
+      "patience": 7,
+      "factor": 0.2
+    }
+  },
+  "loss_function": {
+    "name": "BCELoss"
+  },
+  "trainer_delegate": {
+    "name": "DenseNet"
+  },
+  "result_delegate": {
+    "name": "DenseNet"
+  },
+  "data_source_delegate": {
+    "name": "DenseNet",
+    "parameters": {
+      "batch_size": 32,
+      "n_splits": 5,
+      "splits_to_use": 3,
+      "testing_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/test.json",
+      "training_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/train.json"
+    }
+  },
+  "saver_delegate": {
+    "name": "DenseNet"
+  },
+  "n_epochs": 40
+}
+
