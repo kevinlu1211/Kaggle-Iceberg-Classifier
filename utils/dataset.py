@@ -33,23 +33,25 @@ def create_dataloader_from_path(data_fp, is_train=True, batch_size=64):
     dataset = IcebergDataset(df, is_train=is_train)
     return DataLoader(dataset, batch_size=batch_size)
 
-def create_dataloader(df, is_train=True, shuffle=True, batch_size=64):
-    dataset = IcebergDataset(df, is_train=is_train)
+def create_dataloader(df, image_size, is_train=True, shuffle=True, batch_size=64):
+    dataset = IcebergDataset(df, is_train, image_size)
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
 
 class IcebergDataset(torch.utils.data.Dataset):
-    def __init__(self, df, is_train=True):
+    def __init__(self, df, is_train, image_size):
         super().__init__()
         self.img = df['input']
         self.target = df['label']
         self.ids = df['id']
         self.is_train = is_train
+
         if is_train:
             self.transform = transforms.Compose([
                 transforms.ToPILImage(),
+                transforms.Resize(image_size),
                 # transforms.RandomCrop(60),
-                # transforms.RandomHorizontalFlip(),
+                transforms.RandomHorizontalFlip(),
                 transforms.ToTensor()
             ])
         else:

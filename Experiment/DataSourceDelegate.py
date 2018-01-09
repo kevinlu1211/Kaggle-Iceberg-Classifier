@@ -8,7 +8,8 @@ from src.utils import create_dataloader
 
 
 class DataSourceDelegate(object):
-    def __init__(self, training_data_path, testing_data_path, batch_size, splits_to_use, n_splits):
+    def __init__(self, training_data_path, testing_data_path, batch_size,
+                 splits_to_use, n_splits, image_size=(75, 75)):
         self.training_data_path = training_data_path
         self.test_data_path = testing_data_path
         self.batch_size = batch_size
@@ -17,6 +18,7 @@ class DataSourceDelegate(object):
         self.splits = None
         self.training_data = None
         self.test_data = None
+        self.image_size = image_size
 
 
     def _get_data_reader(self, path):
@@ -95,10 +97,12 @@ class DataSourceDelegate(object):
             train_df = self.training_data.iloc[train_idx].reset_index(drop=True)
             val_df = self.training_data.iloc[test_idx].reset_index(drop=True)
             train_dataloader = create_dataloader(train_df, is_train=True,
-                                                 batch_size=self.batch_size)
+                                                 batch_size=self.batch_size,
+                                                 image_size=self.image_size)
             val_dataloader = create_dataloader(val_df, is_train=False,
                                                shuffle=False,
-                                               batch_size=self.batch_size)
+                                               batch_size=self.batch_size,
+                                               image_size=self.image_size)
             yield {"train": train_dataloader,
                    "val": val_dataloader}
 
