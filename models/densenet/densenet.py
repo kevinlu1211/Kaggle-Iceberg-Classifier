@@ -73,6 +73,15 @@ class DenseNet(nn.Module):
         # n_fc = self._get_conv_output(input_shape)
         self.classifier = nn.Linear(n_features, n_classes)
 
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal(m.weight.data)
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.Linear):
+                m.bias.data.zero_()
+
     def _get_conv_output(self, shape):
         bs = 1
         inp = Variable(torch.rand(bs, *shape))

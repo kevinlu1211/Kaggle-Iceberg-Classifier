@@ -1,5 +1,4 @@
-import pandas as pd
-import torch
+import random
 import logging
 import numpy as np
 import pandas as pd
@@ -52,7 +51,7 @@ class DataSourceDelegate(object):
         logging.info("Reshaping input images ...")
         data['band_1_rs'] = data['band_1'].apply(lambda x: np.array(x).reshape(75, 75))
         data['band_2_rs'] = data['band_2'].apply(lambda x: np.array(x).reshape(75, 75))
-        data['band_3_rs'] = data['band_1_rs'] / data['band_2_rs']
+        data['band_3_rs'] = (data['band_1_rs'] + data['band_2_rs'])/2
         data['inc_angle'] = pd.to_numeric(data['inc_angle'], errors='coerce')
 
         band_1 = np.concatenate([im for im in data['band_1_rs']]).reshape(-1, 75, 75)
@@ -87,7 +86,7 @@ class DataSourceDelegate(object):
 
     def data_split(self, data):
         folds = StratifiedKFold(n_splits=self.n_splits).split(data, data['is_iceberg'])
-        return list(folds)[:self.splits_to_use]
+        return random.sample(list(folds), self.splits_to_use)
 
     def retrieve_dataset_for_train(self):
         if self.training_data is None:

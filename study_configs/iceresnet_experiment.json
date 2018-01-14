@@ -1,31 +1,18 @@
 {
   "model": {
-    "name": "DenseNet",
-    "model_configuration_name": "DenseNet121",
+    "name": "IceResNet",
+    "model_configuration_name": "IceResNet",
     "parameters": {
-      "block_config": [6, 12, 24, 16],
-      "growth_rate": 32,
-      "n_init_features": 64,
-      "bn_size": 4,
-      "dropout_rates": [[0, 0, 0, 0]],
-      "n_classes": 1,
-      "input_shape": [3, 75, 75]
+      "num_classes": 1,
+      "num_rgb": 3,
+      "base": 32
     }
   },
   "optimizer": {
     "name": "ADAM",
     "parameters": {
-      "lr": [0.001, 0.0003],
-      "weight_decay": [0]
-    }
-  },
-  "scheduler": {
-    "name": "ReduceLROnPlateau",
-    "parameters": {
-      "verbose": true,
-      "threshold": 0.1,
-      "patience": 15,
-      "factor": 0.33
+      "lr": [0.005, 0.0005],
+      "weight_decay": [0.00005]
     }
   },
   "loss_function": {
@@ -51,6 +38,6 @@
   "saver_delegate": {
     "name": "DenseNet"
   },
-  "n_epochs": 75
+  "n_epochs": 80
 }
 

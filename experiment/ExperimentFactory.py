@@ -1,4 +1,5 @@
 from uuid import uuid4
+import logging
 from .Experiment import Experiment
 from src.utils import cudarize
 
@@ -84,6 +85,7 @@ class ExperimentFactory(object):
                                                                      evaluation_delegate_parameters)
 
         model_factory = ModelFactory(experiment_config, self.model_lookup, self.optimizer_lookup, self.scheduler_lookup)
+        logging.info(f"Model name: {experiment_config.get('model').get('name')}")
         return Experiment(model_factory, experiment_config.get("n_epochs"), data_source_delegate,
                           trainer_delegate, evaluation_delegate, saver_delegate,
                           loss_function)
@@ -105,7 +107,11 @@ class ModelFactory(object):
         # Create the optimizer
         optimizer_name = self.experiment_config.get("optimizer").get("name")
         optimizer_parameters = self.experiment_config.get("optimizer").get("parameters", {})
-        optimizer_parameters["params"] = model.parameters()
+        fine_tuning_parameters = self.experiment_config.get("optimizer").get("fine_tuning_parameters")
+        if fine_tuning_parameters is not None:
+            optimizer_parameters = model.get_parameters(optimizer_parameters, fine_tuning_parameters)
+        else:
+            optimizer_parameters["params"] = model.parameters()
         optimizer_ptr = self.optimizer_lookup.get(optimizer_name)
         optimizer = ExperimentFactory.create_component(optimizer_ptr, optimizer_parameters)
 

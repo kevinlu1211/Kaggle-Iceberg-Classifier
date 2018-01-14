@@ -50,8 +50,9 @@ class IcebergDataset(torch.utils.data.Dataset):
             self.transform = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize(image_size),
-                # transforms.RandomCrop(60),
+                transforms.RandomVerticalFlip(),
                 transforms.RandomHorizontalFlip(),
+                transforms.RandomRotation(45),
                 transforms.ToTensor()
             ])
         else:
