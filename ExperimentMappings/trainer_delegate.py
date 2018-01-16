@@ -1,4 +1,4 @@
-from src.Experiment import TrainerDelegate
+from src.StatOil import TrainerDelegate as StatOilTrainerDelegate
 trainer_delegates = {
-    "DenseNet": TrainerDelegate
+    "StatOil": StatOilTrainerDelegate
 }

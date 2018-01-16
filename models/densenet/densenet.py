@@ -51,7 +51,7 @@ class DenseNet(nn.Module):
         super(DenseNet, self).__init__()
 
         self.features = nn.Sequential(OrderedDict([
-            ('conv0', nn.Conv2d(3, n_init_features, kernel_size=7, stride=2, bias=False)),
+            ('conv0', nn.Conv2d(input_shape[0], n_init_features, kernel_size=7, stride=2, bias=False)),
             ('norm0', nn.BatchNorm2d(n_init_features)),
             ('relu0', nn.ReLU(inplace=True)),
         ]))

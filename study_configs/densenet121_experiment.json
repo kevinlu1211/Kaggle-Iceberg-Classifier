@@ -7,7 +7,7 @@
       "growth_rate": 32,
       "n_init_features": 64,
       "bn_size": 4,
-      "dropout_rates": [[0, 0, 0, 0]],
+      "dropout_rates": [[0.2, 0.15, 0.10 , 0.05]],
       "n_classes": 1,
       "input_shape": [3, 75, 75]
     }
@@ -15,8 +15,8 @@
   "optimizer": {
     "name": "ADAM",
     "parameters": {
-      "lr": [0.001, 0.0003],
-      "weight_decay": [0]
+      "lr": [0.00003],
+      "weight_decay": [0.003]
     }
   },
   "scheduler": {
@@ -24,33 +24,34 @@
     "parameters": {
       "verbose": true,
       "threshold": 0.1,
-      "patience": 15,
-      "factor": 0.33
+      "patience": 10,
+      "factor": 0.5
     }
   },
   "loss_function": {
     "name": "BCELoss"
   },
   "trainer_delegate": {
-    "name": "DenseNet"
+    "name": "StatOil"
   },
   "result_delegate": {
-    "name": "DenseNet"
+    "name": "StatOil"
   },
   "data_source_delegate": {
-    "name": "DenseNet",
+    "name": "StatOil",
     "parameters": {
       "batch_size": 40,
       "n_splits": 5,
-      "splits_to_use": 5,
+      "splits_to_use": 2,
+      "data_handler_method": "ThreeChannels",
       "image_size": [75, 75],
       "testing_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/test.json",
       "training_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/train.json"
     }
   },
   "saver_delegate": {
-    "name": "DenseNet"
+    "name": "StatOil"
   },
-  "n_epochs": 75
+  "n_epochs": 50
 }
 

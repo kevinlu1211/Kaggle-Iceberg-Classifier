@@ -1,4 +1,4 @@
-from src.Experiment import DataSourceDelegate
+from src.StatOil import DataSourceDelegate as StatOilDataSourceDelegate
 data_source_delegates = {
-    "DenseNet": DataSourceDelegate
+    "StatOil": StatOilDataSourceDelegate
 }

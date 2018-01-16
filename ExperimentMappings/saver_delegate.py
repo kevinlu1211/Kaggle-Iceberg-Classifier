@@ -1,4 +1,4 @@
-from src.Experiment import SaverDelegate
+from src.StatOil import SaverDelegate as StatOilSaverDelegate
 saver_delegates = {
-    "DenseNet": SaverDelegate
+    "StatOil": StatOilSaverDelegate
 }

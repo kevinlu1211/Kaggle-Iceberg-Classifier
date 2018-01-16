@@ -27,24 +27,19 @@ class SaverDelegate(object):
     def save_results(self, data, model_output, model_loss, mode):
         labels = data['label'].numpy()
         ids = data['id']
-        model_output = model_output.clamp(min=0.0001, max=0.9999)
-        try:
-            per_data_loss = -(labels * np.log(model_output.data) + (1 - labels) * np.log(1 - model_output.data)).numpy()
-            per_data_loss = np.reshape(per_data_loss, -1)
-            print
-        except Exception as e:
-            print(e)
-            print("what?")
+        model_output = model_output.clamp(min=1e-6, max=0.999999)
+        per_data_loss = -(labels * np.log(model_output.data) + (1 - labels) * np.log(1 - model_output.data)).numpy()
+        per_data_loss = np.reshape(per_data_loss, -1)
         labels = np.reshape(labels, -1)
+        predicted = (model_output.data > 0.5).float().cpu().squeeze().numpy()
 
-        for id, output, label, loss in zip(ids, model_output.data.squeeze(), labels, per_data_loss):
-            self.training_results_for_epoch.append(
-                dict(id=id, output=output, label=label, loss=loss, train_or_validation=mode))
-
-        if mode == "TRAIN":
-            self.training_loss_for_epoch.append(model_loss.data[0])
-        else:
-            self.validation_loss_for_epoch.append(model_loss.data[0])
+        for id, output, label, predicted, loss in zip(ids, model_output.data.squeeze(), labels, predicted, per_data_loss):
+            if mode == "TRAIN":
+                self.training_results_for_epoch.append(
+                    dict(id=id, output=output, label=label, predicted=predicted, loss=loss, train_or_validation=mode))
+            if mode == "VALIDATION":
+                self.validation_results_for_epoch.append(
+                    dict(id=id, output=output, label=label, predicted=predicted, loss=loss, train_or_validation=mode))
 
     def _save_model(self, model, epoch, fold_num, loss):
         models_checkpoint_folder_path = Path(
@@ -60,16 +55,23 @@ class SaverDelegate(object):
         [d.update({"fold": fold_num, "epoch": epoch}) for d in self.validation_results_for_epoch]
         self.all_results.extend(self.validation_results_for_epoch)
 
-        avg_train_loss = np.mean(self.training_loss_for_epoch)
-        avg_validation_loss = np.mean(self.validation_loss_for_epoch)
+        train_df = pd.DataFrame(self.training_results_for_epoch)
+        validation_df = pd.DataFrame(self.validation_results_for_epoch)
+        avg_train_loss = train_df.mean()['loss']
+        avg_validation_loss = validation_df.mean()['loss']
+        avg_train_acc = (train_df['predicted'] == train_df['label']).mean()
+        avg_validation_acc = (validation_df['predicted'] == validation_df['label']).mean()
+        logging.info(f"Training loss for epoch: {epoch} is {avg_train_loss}")
+        logging.info(f"Validation loss for epoch: {epoch} is {avg_validation_loss}")
+        logging.info(f"Training accuracy for epoch: {epoch} is {avg_train_acc}")
+        logging.info(f"Validation accuracy for epoch: {epoch} is {avg_validation_acc}")
 
         self.all_loss_results.append(dict(fold=fold_num, epoch=epoch,
                                           training_loss=avg_train_loss, validation_loss=avg_validation_loss))
 
         self._save_model(model, epoch, fold_num, avg_validation_loss)
 
-        logging.info(f"Training loss for epoch: {epoch} is {avg_train_loss}")
-        logging.info(f"Validation loss for epoch: {epoch} is {avg_validation_loss}")
+
         self.last_epoch_validation_loss = avg_validation_loss
         self.training_results_for_epoch = []
         self.validation_results_for_epoch = []

@@ -1,4 +1,4 @@
-from src.Experiment import EvaluationDelegate
+from src.StatOil import EvaluationDelegate as StatOilEvaluationDelegate
 evaluation_delegates = {
-    "EvaluationDelegate": EvaluationDelegate,
+    "StatOil": StatOilEvaluationDelegate,
 }

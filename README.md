@@ -98,13 +98,13 @@ Config file:
     "name": "BCELoss"
   },
   "trainer_delegate": {
-    "name": "DenseNet"
+    "name": "StatOil"
   },
   "result_delegate": {
-    "name": "DenseNet"
+    "name": "StatOil"
   },
   "data_source_delegate": {
-    "name": "DenseNet",
+    "name": "StatOil",
     "parameters": {
       "batch_size": 40,
       "n_splits": 5,
@@ -115,7 +115,7 @@ Config file:
     }
   },
   "saver_delegate": {
-    "name": "DenseNet"
+    "name": "StatOil"
   },
   "n_epochs": 50
 }
@@ -171,13 +171,13 @@ Config File:
     "name": "BCELoss"
   },
   "trainer_delegate": {
-    "name": "DenseNet"
+    "name": "StatOil"
   },
   "result_delegate": {
-    "name": "DenseNet"
+    "name": "StatOil"
   },
   "data_source_delegate": {
-    "name": "DenseNet",
+    "name": "StatOil",
     "parameters": {
       "batch_size": 40,
       "n_splits": 5,
@@ -188,7 +188,7 @@ Config File:
     }
   },
   "saver_delegate": {
-    "name": "DenseNet"
+    "name": "StatOil"
   },
   "n_epochs": 50
 }
@@ -252,13 +252,13 @@ Config File:
     "name": "BCELoss"
   },
   "trainer_delegate": {
-    "name": "DenseNet"
+    "name": "StatOil"
   },
   "result_delegate": {
-    "name": "DenseNet"
+    "name": "StatOil"
   },
   "data_source_delegate": {
-    "name": "DenseNet",
+    "name": "StatOil",
     "parameters": {
       "batch_size": 40,
       "n_splits": 5,
@@ -269,7 +269,7 @@ Config File:
     }
   },
   "saver_delegate": {
-    "name": "DenseNet"
+    "name": "StatOil"
   },
   "n_epochs": 50
 }
@@ -291,12 +291,325 @@ transforms.Compose([
 Results:
 ![alt text][image4]
 
-Not much to say here except I want to explore lower and higher learning rates in the next experiment. Though... it does
-seem like with data augmentation we might need a model with more capacity as we can't overfit the training data. Either
-that or the data augmentation may be too aggressive, and as a result it is creating too much noise (?). So before I start 
-the next experiment I'm going to have a quick look at the transformations. Also I will look at using a less aggressive 
-learning rate scheduler
+It seems like dropout doesn't really help as seen by the variance in the validation performance. Though the main thing
+to point out is that no matter what learning rate is used the validation error doesn't seem to be able to decrease below
+`~0.3`. For my next step I'm going to run a series of experiments similar to what I have done above, but with 
+[Squeeze-Excitation Networks](https://arxiv.org/abs/1709.01507), and also use a less aggressive learning rate scheduler
 
 For next experiment:
 * Use less aggressive learning rate scheduler
 * Try model with higher capacity
+
+##### Experiment 4
+
+`TODO: Refactor the delegate names, the logic in them can be reduced between models`
+
+Experiment Config:
+```
+{
+  "model": {
+    "name": "IceResNet",
+    "model_configuration_name": "IceResNet",
+    "parameters": {
+      "num_classes": 1,
+      "num_rgb": 3,
+      "base": 32
+    }
+  },
+  "optimizer": {
+    "name": "ADAM",
+    "parameters": {
+      "lr": [0.005, 0.0005],
+      "weight_decay": [0.00005]
+    }
+  },
+  'scheduler': {'name': 'ReduceLROnPlateau',
+      'parameters': {'factor': 0.33,
+       'patience': 15,
+       'threshold': 0.1,
+       'verbose': True
+       }
+  },
+  "loss_function": {
+    "name": "BCELoss"
+  },
+  "trainer_delegate": {
+    "name": "StatOil"
+  },
+  "result_delegate": {
+    "name": "StatOil"
+  },
+  "data_source_delegate": {
+    "name": "StatOil",
+    "parameters": {
+      "batch_size": 40,
+      "n_splits": 5,
+      "splits_to_use": 5,
+      "image_size": [75, 75],
+      "testing_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/test.json",
+      "training_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/train.json"
+    }
+  },
+  "saver_delegate": {
+    "name": "StatOil"
+  },
+  "n_epochs": 80
+}
+```
+
+Data Augmentation:
+
+```
+transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.Resize(image_size),
+                transforms.RandomVerticalFlip(),
+                transforms.RandomRotation(45),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor()
+            ])
+```
+
+Results:
+[image5]: ./README_images/iceresnet_ADAM_no_scheduler_no_dataaug.png
+[image6]: ./README_images/iceresnet_ADAM_no_scheduler_dataaug.png
+[image7]: ./README_images/iceresnet_ADAM_scheduler_dataaug.png
+[image8]: ./README_images/iceresnet_ADAM_no_scheduler_dataaug_no_rotation.png
+No learning rate scheduler and no data augmentation
+![alt_text][image5]
+
+No learning rate scheduler and data augmentation
+![alt_text][image6]
+
+Learning rate scheduler and data augmentation
+![alt_text][image7]
+
+Learning rate scheduler and data augmentation (no rotation)
+![alt_text][image8]
+
+Again it really seems like we are just getting stuck at a loss of `~0.3`. One thing that I haven't messed around with is
+changing the data augmentation step. As the `ToTensor()` method of PyTorch rescales the images to values `[0, 1]` 
+and the values of the image aren't this may cause some loss in the information.
+
+For next experiment:
+* Don't use PyTorch's in-built transform functions
+
+##### Experiment 5
+
+Experiment Config:
+```angular2html
+{
+  "model": {
+    "name": "IceResNet",
+    "model_configuration_name": "IceResNet",
+    "parameters": {
+      "num_classes": 1,
+      "num_rgb": 3,
+      "base": 32
+    }
+  },
+  "optimizer": {
+    "name": "ADAM",
+    "parameters": {
+      "lr": [0.0005],
+      "weight_decay": [0.00005]
+    }
+  },
+  "scheduler": {"name": "ReduceLROnPlateau",
+      "parameters": {"factor": 0.5,
+       "patience": 15,
+       "threshold": 0.1,
+       "verbose": true
+       }
+  },
+  "loss_function": {
+    "name": "BCELoss"
+  },
+  "trainer_delegate": {
+    "name": "StatOil"
+  },
+  "result_delegate": {
+    "name": "StatOil"
+  },
+  "data_source_delegate": {
+    "name": "StatOil",
+    "parameters": {
+      "batch_size": 40,
+      "n_splits": 5,
+      "splits_to_use": 5,
+      "image_size": [75, 75],
+      "data_handler_method": "ThreeChannels",
+      "testing_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/test.json",
+      "training_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/train.json"
+    }
+  },
+  "saver_delegate": {
+    "name": "StatOil"
+  },
+  "n_epochs": 80
+}
+```
+
+Data Augmentation:
+```angular2html
+ transforms.Compose([
+            horizontal_flip,
+            convert_image_to_tensor
+        ])
+```
+
+Results:
+
+[image9]: ./README_images/iceresnet_ADAM_scheduler_newdataaug.png
+![alt_text][image9]
+
+Wow definitely a big change in our loss, reaching `~0.2`. The next thing to try would be to see if only using two 
+channels would be better.
+
+For next experiment:
+* Only use two channels 
+
+```angular2html
+{
+  "model": {
+    "name": "IceResNet",
+    "model_configuration_name": "IceResNet",
+    "parameters": {
+      "num_classes": 1,
+      "num_rgb": 2,
+      "base": 32
+    }
+  },
+  "optimizer": {
+    "name": "ADAM",
+    "parameters": {
+      "lr": [0.0005],
+      "weight_decay": [0.00005]
+    }
+  },
+  "scheduler": {"name": "ReduceLROnPlateau",
+      "parameters": {"factor": 0.5,
+       "patience": 15,
+       "threshold": 0.1,
+       "verbose": true
+       }
+  },
+  "loss_function": {
+    "name": "BCELoss"
+  },
+  "trainer_delegate": {
+    "name": "StatOil"
+  },
+  "result_delegate": {
+    "name": "StatOil"
+  },
+  "data_source_delegate": {
+    "name": "StatOil",
+    "parameters": {
+      "batch_size": 40,
+      "n_splits": 5,
+      "splits_to_use": 5,
+      "image_size": [75, 75],
+      "data_handler_method": "TwoChannels",
+      "testing_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/test.json",
+      "training_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/train.json"
+    }
+  },
+  "saver_delegate": {
+    "name": "StatOil"
+  },
+  "n_epochs": 80
+}
+```
+
+Data Augmentation:
+```angular2html
+ transforms.Compose([
+            horizontal_flip,
+            convert_image_to_tensor
+        ])
+```
+
+Results:
+
+[image10]: ./README_images/iceresnet2_ADAM_scheduler_newdataaug_2ch.png
+![alt_text][image10]
+
+After two runs, it seems like there isn't much of a difference, though it does seem like with 2 channels, the model is 
+able to fit the training data better. Nevertheless, the main thing to do now is to see if overfitting can be prevented.
+Also the scheduler that is used is stochastic so it makes it a bit after to compare, so I might use a fixed scheduler
+in the next experiment... The problem being that it would require even more tuning. Another interesting thing to 
+explore would be a grid search of the learning rates and weight decays.
+
+Next experiment:
+* Try rotations to prevent overfitting
+* Use a variety of weight decays
+* Try implementing dropout & probabilistic pooling
+
+Experiment Config:
+```angular2html
+{
+  "model": {
+    "name": "IceResNet",
+    "model_configuration_name": "IceResNet",
+    "parameters": {
+      "num_classes": 1,
+      "num_rgb": 2,
+      "base": 32
+    }
+  },
+  "optimizer": {
+    "name": "ADAM",
+    "parameters": {
+      "lr": [0.0005],
+      "weight_decay": [0.005, 0.0005, 0.00005]
+    }
+  },
+  "scheduler": {"name": "ReduceLROnPlateau",
+      "parameters": {"factor": 0.5,
+       "patience": 15,
+       "threshold": 0.1,
+       "verbose": true
+       }
+  },
+  "loss_function": {
+    "name": "BCELoss"
+  },
+  "trainer_delegate": {
+    "name": "StatOil"
+  },
+  "result_delegate": {
+    "name": "StatOil"
+  },
+  "data_source_delegate": {
+    "name": "StatOil",
+    "parameters": {
+      "batch_size": 40,
+      "n_splits": 5,
+      "splits_to_use": 5,
+      "image_size": [75, 75],
+      "data_handler_method": "TwoChannels",
+      "testing_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/test.json",
+      "training_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/train.json"
+    }
+  },
+  "saver_delegate": {
+    "name": "StatOil"
+  },
+  "n_epochs": 80
+}
+
+
+```
+Data Augmentation:
+```angular2html
+ transforms.Compose([
+            horizontal_flip,
+            rotation,
+            convert_image_to_tensor
+        ])
+```
+
+
+
+

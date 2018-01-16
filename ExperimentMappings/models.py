@@ -2,6 +2,7 @@ from torchvision import models
 from src.models.densenet import DenseNet
 from src.models.densenet_pytorch import DenseNet121PyTorch
 from src.models.senet import iceresnet
+from src.models.senet import triple_column_iceresnet
 
 models = {
     "DenseNet": DenseNet,
@@ -9,7 +10,8 @@ models = {
     "DenseNet161PyTorch": models.densenet161,
     "DenseNet169PyTorch": models.densenet169,
     "DenseNet201PyTorch": models.densenet201,
-    "IceResNet": iceresnet
+    "IceResNet": iceresnet,
+    "TripleColumnIceResNet": triple_column_iceresnet
 }
 
 
