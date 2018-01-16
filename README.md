@@ -369,12 +369,13 @@ transforms.Compose([
                 transforms.ToTensor()
             ])
 ```
-
-Results:
 [image5]: ./README_images/iceresnet_ADAM_no_scheduler_no_dataaug.png
 [image6]: ./README_images/iceresnet_ADAM_no_scheduler_dataaug.png
 [image7]: ./README_images/iceresnet_ADAM_scheduler_dataaug.png
 [image8]: ./README_images/iceresnet_ADAM_no_scheduler_dataaug_no_rotation.png
+
+Results:
+
 No learning rate scheduler and no data augmentation
 ![alt_text][image5]
 
@@ -544,7 +545,8 @@ explore would be a grid search of the learning rates and weight decays.
 Next experiment:
 * Try rotations to prevent overfitting
 * Use a variety of weight decays
-* Try implementing dropout & probabilistic pooling
+
+##### Experiment 6
 
 Experiment Config:
 ```angular2html
