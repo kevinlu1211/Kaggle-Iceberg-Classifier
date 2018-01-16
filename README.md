@@ -302,8 +302,6 @@ For next experiment:
 
 ##### Experiment 4
 
-`TODO: Refactor the delegate names, the logic in them can be reduced between models`
-
 Experiment Config:
 ```
 {
@@ -470,6 +468,9 @@ channels would be better.
 For next experiment:
 * Only use two channels 
 
+##### Experiment 6
+
+Experiment Config:
 ```angular2html
 {
   "model": {
@@ -546,7 +547,7 @@ Next experiment:
 * Try rotations to prevent overfitting
 * Use a variety of weight decays
 
-##### Experiment 6
+##### Experiment 7
 
 Experiment Config:
 ```angular2html
