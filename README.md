@@ -3,6 +3,14 @@
 This repository is a competition hosted on [Kaggle](https://www.kaggle.com/c/statoil-iceberg-classifier-challenge) for 
 detecting whether the picture has a iceberg or a ship.
 
+#### Things to try:
+* ~~Try and optimize over different kinds of neural network architectures~~
+* Try XGBoost and SVMs (with HOG features) and compare results to CNN
+* Explore stacking with different classifers
+* Try to do psuedo-labelling on the test set to create more training data
+* Try expanding number of samples by implementing [Data augmentation by pairing samples
+for images classification](https://arxiv.org/pdf/1801.02929.pdf)
+
 #### Experiment Framework
 
 This repo also includes an Experiment framework which I have written to make my life easier when training
@@ -15,9 +23,9 @@ This repo also includes an Experiment framework which I have written to make my 
  ![alt text][image1]
 
 
-The main purpose of the framework is to create an end-to-end pipeline (data preprocessing -> model training -> 
+The main purpose of the framework is to create an end-to-end pipeline (data pre-processing -> model training -> 
 evaluating model performance) that can easily manipulated. As a result of the lookup dictionaries being injected
-into the ExperimentFactory I can mix and match different kinds of preprocessing methods, optimizer, schedulers, and 
+into the ExperimentFactory I can mix and match different kinds of pre-processing methods, optimizer, schedulers, and 
 model architectures without having to write extra boilerplate code. Moreover, due to the Experiment Configuration File
 I will easily be able to re-run past experiments, just by passing the configuration file into the ExperimentFactory
 
@@ -466,7 +474,7 @@ Wow definitely a big change in our loss, reaching `~0.2`. The next thing to try 
 channels would be better.
 
 For next experiment:
-* Only use two channels 
+* Only use two channels with a variety of learning rates
 
 ##### Experiment 6
 
@@ -485,7 +493,7 @@ Experiment Config:
   "optimizer": {
     "name": "ADAM",
     "parameters": {
-      "lr": [0.0005],
+      "lr": [0.005, 0.0005, 0.00005],
       "weight_decay": [0.00005]
     }
   },
@@ -537,14 +545,10 @@ Results:
 [image10]: ./README_images/iceresnet2_ADAM_scheduler_newdataaug_2ch.png
 ![alt_text][image10]
 
-After two runs, it seems like there isn't much of a difference, though it does seem like with 2 channels, the model is 
+After three runs at a learning rate, it seems like there isn't much of a difference, though it does seem like with 2 channels, the model is 
 able to fit the training data better. Nevertheless, the main thing to do now is to see if overfitting can be prevented.
-Also the scheduler that is used is stochastic so it makes it a bit after to compare, so I might use a fixed scheduler
-in the next experiment... The problem being that it would require even more tuning. Another interesting thing to 
-explore would be a grid search of the learning rates and weight decays.
 
 Next experiment:
-* Try rotations to prevent overfitting
 * Use a variety of weight decays
 
 ##### Experiment 7
@@ -613,6 +617,97 @@ Data Augmentation:
         ])
 ```
 
+Results:
 
+[image11]: ./README_images/iceresnet2_ADAM_scheduler_newdataaug_2ch_rotation.png
+![alt_text][image11]
 
+It does seem like rotation is introducing more noise, though it is hard to say. Though, one thing to consider is that 
+these images are already heavily preprocessed, and aren't traditional images so maybe this is the reason why it doesn't
+work.
 
+##### Experiment 8
+
+In this experiment I tried a triple column resnet, though it didn't really fit well, never being able to generalize well 
+and only reaching `~0.5` loss on the validation set.
+
+##### Experiment 8.5
+
+In this experiment I tried fine-tuning the pretrained DenseNet networks from torchvision, though they didn't work very 
+well. Probably due to the fact that the images were being normalized between 0-1.
+##### Experiment 9
+
+Experiment Config:
+```angular2html
+{
+  "model": {
+    "name": "IceResNet",
+    "model_configuration_name": "IceResNet",
+    "parameters": {
+      "num_classes": 1,
+      "num_rgb": 2,
+      "base": 24,
+      "dropout_rates": [[0,0,0,0], [0.1,0.1,0.1,0.1],[0.2,0.2,0.2,0.2]]
+    }
+  },
+  "optimizer": {
+    "name": "ADAM",
+    "parameters": {
+      "lr": [0.0005],
+      "weight_decay": [0.00005]
+    }
+  },
+  "scheduler": {"name": "ReduceLROnPlateau",
+      "parameters": {"factor": 0.5,
+       "patience": 15,
+       "threshold": 0.1,
+       "verbose": true
+       }
+  },
+  "loss_function": {
+    "name": "BCELoss"
+  },
+  "trainer_delegate": {
+    "name": "StatOil"
+  },
+  "result_delegate": {
+    "name": "StatOil"
+  },
+  "data_source_delegate": {
+    "name": "StatOil",
+    "parameters": {
+      "batch_size": 40,
+      "n_splits": 5,
+      "splits_to_use": 5,
+      "image_size": [75, 75],
+      "data_handler_method": "TwoChannels",
+      "testing_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/test.json",
+      "training_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/train.json"
+    }
+  },
+  "saver_delegate": {
+    "name": "StatOil"
+  },
+  "n_epochs": 80
+}
+```
+
+Data Augmentation:
+```angular2html
+ transforms.Compose([
+            horizontal_flip,
+            convert_image_to_tensor
+        ])
+```
+
+Results:
+
+[image12]: ./README_images/iceresnet2_ADAM_scheduler_newdataaug_2ch_24base.png
+![alt_text][image12]
+
+There doesn't seem to be much difference, and it seems like the minimum error I'm getting for each model is `~0.2` so 
+since I've determined an neural network architecture to use, the next step is to explore ensembling with the networks.
+Also I could try using differ
+
+Another thing that I haven't tried is to put dropout between the ResNet blocks and the fully connected layer after the 
+GAP layer. Also I could try to flatten out the feature maps in the last layer instead of doing global pooling.

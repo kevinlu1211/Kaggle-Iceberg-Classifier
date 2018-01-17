@@ -5,14 +5,15 @@
     "parameters": {
       "num_classes": 1,
       "num_rgb": 2,
-      "base": 32
+      "base": 24,
+      "dropout_rates": [[0,0,0,0]]
     }
   },
   "optimizer": {
     "name": "ADAM",
     "parameters": {
       "lr": [0.0005],
-      "weight_decay": [0.005, 0.0005, 0.00005]
+      "weight_decay": [0.00005]
     }
   },
   "scheduler": {"name": "ReduceLROnPlateau",

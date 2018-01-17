@@ -65,8 +65,9 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--study_save_path", default="../study_results/triple_column_iceresnet_ADAM_scheduler_newdataaug_2ch")
-    parser.add_argument("--experiment_config_path", default="study_configs/triple_column_iceresnet_experiment.json")
+    parser.add_argument("--study_save_path", default="../study_results/densenet121_newdataaug")
+    parser.add_argument("--experiment_config_path", default="study_configs/densenet121_experiment.json")
+    # parser.add_argument("--experiment_config_path", default="study_configs/triple_column_iceresnet_experiment.json")
     # parser.add_argument("--experiment_config_path", default="study_configs/iceresnet2_experiment.json")
     parser.add_argument("--logging_level", default="INFO")
     opts = parser.parse_args()

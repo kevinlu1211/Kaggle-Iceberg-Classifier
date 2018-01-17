@@ -172,7 +172,7 @@ class IceSEBasicBlock(nn.Module):
         self.downsample = nn.Sequential(nn.Conv2d(inplanes, planes, kernel_size=1,
                                                   stride=1, bias=False),
                                         nn.BatchNorm2d(planes))
-
+        self.global_features = []
     def forward(self, x):
         residual = self.downsample(x)
 
@@ -191,7 +191,7 @@ class IceSEBasicBlock(nn.Module):
 
 
 class IceResNet(nn.Module):
-    def __init__(self, block, n_size=1, num_classes=1, num_rgb=2, base=32, drop_rates=[0, 0, 0, 0]):
+    def __init__(self, block, n_size=1, num_classes=1, num_rgb=2, base=32, dropout_rates=[0, 0, 0, 0]):
         super(IceResNet, self).__init__()
         self.base = base
         self.num_classes = num_classes
@@ -204,7 +204,7 @@ class IceResNet(nn.Module):
         self.layer2 = self._make_layer(block, self.inplane * 2, blocks=2 * n_size, stride=2)
         self.layer3 = self._make_layer(block, self.inplane * 4, blocks=2 * n_size, stride=2)
         self.avgpool = nn.AdaptiveAvgPool2d(1)
-        self.drop_rates = drop_rates
+        self.dropout_rates = dropout_rates
         self.fc = nn.Linear(int(8 * self.base), num_classes)
         nn.init.kaiming_normal(self.fc.weight)
         self.sig = nn.Sigmoid()
@@ -231,21 +231,21 @@ class IceResNet(nn.Module):
         x = self.bn1(x)
         x = self.relu(x)
 
-        x = F.dropout(self.layer1(x), p=self.drop_rates[0])
-        x = F.dropout(self.layer2(x), p=self.drop_rates[1])
-        x = F.dropout(self.layer3(x), p=self.drop_rates[2])
+        x = F.dropout(self.layer1(x), p=self.dropout_rates[0])
+        x = F.dropout(self.layer2(x), p=self.dropout_rates[1])
+        x = F.dropout(self.layer3(x), p=self.dropout_rates[2])
         # x = self.layer4(x)
-
+        x = self.avgpool(x)
         x = x.view(x.size(0), -1)
         # print (x.data.size())
         if features_only:
             return x
         else:
-            x = F.dropout(self.fc(x), p=self.drop_rates[3])
+            x = F.dropout(self.fc(x), p=self.dropout_rates[3])
         return x
 
-def iceresnet(n_size=1, num_classes=1, num_rgb=3, base=32):
-    return IceResNet(IceSEBasicBlock, n_size, num_classes, num_rgb, base)
+def iceresnet(n_size=1, num_classes=1, num_rgb=3, base=32, dropout_rates=[0, 0, 0, 0]):
+    return IceResNet(IceSEBasicBlock, n_size, num_classes, num_rgb, base, dropout_rates)
 
 class TripleColumnIceResNet(nn.Module):
     def __init__(self, block, n_size, num_classes, num_rgbs, bases, drop_rates, fc_drop_rate, input_shape=[2, 75, 75]):
