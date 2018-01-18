@@ -46,6 +46,7 @@ class Experiment(object):
 
     def test(self):
         test_data = next(iter(self.data_source_delegate.retrieve_dataset_for_test()))
+        self.model, _, _ = self.model_factory.create_model()
         self.model = self.evaluation_delegate.on_setup_model(self.model)
         test = self.evaluation_delegate.on_test_start(test_data)
         for data in tqdm(test):

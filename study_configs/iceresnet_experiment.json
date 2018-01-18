@@ -4,16 +4,24 @@
     "model_configuration_name": "IceResNet",
     "parameters": {
       "num_classes": 1,
-      "num_rgb": 3,
-      "base": 32
+      "num_rgb": 2,
+      "base": 32,
+      "dropout_rates": [[0,0,0,0]]
     }
   },
   "optimizer": {
     "name": "ADAM",
     "parameters": {
-      "lr": [0.0005],
+      "lr": [0.0005, 0.0005, 0.0005, 0.0005, 0.0005],
       "weight_decay": [0.00005]
     }
+  },
+  "scheduler": {"name": "ReduceLROnPlateau",
+      "parameters": {"factor": 0.5,
+       "patience": 15,
+       "threshold": 0.1,
+       "verbose": true
+       }
   },
   "loss_function": {
     "name": "BCELoss"
@@ -31,11 +39,15 @@
       "n_splits": 5,
       "splits_to_use": 5,
       "image_size": [75, 75],
+      "data_handler_method": "TwoChannels",
       "testing_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/test.json",
       "training_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/train.json"
     }
   },
   "saver_delegate": {
+    "name": "StatOil"
+  },
+  "evaluation_delegate": {
     "name": "StatOil"
   },
   "n_epochs": 80

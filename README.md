@@ -3,6 +3,8 @@
 This repository is a competition hosted on [Kaggle](https://www.kaggle.com/c/statoil-iceberg-classifier-challenge) for 
 detecting whether the picture has a iceberg or a ship.
 
+#### Current rank: 708/3500
+
 #### Things to try:
 * ~~Try and optimize over different kinds of neural network architectures~~
 * Try XGBoost and SVMs (with HOG features) and compare results to CNN
@@ -547,6 +549,8 @@ Results:
 
 After three runs at a learning rate, it seems like there isn't much of a difference, though it does seem like with 2 channels, the model is 
 able to fit the training data better. Nevertheless, the main thing to do now is to see if overfitting can be prevented.
+Though I did do a submission using the `Ensembler.ipynb` notebook, and using an ensemble of my top 20 models I was able 
+to achieve `~0.14` loss on the leaderboard.
 
 Next experiment:
 * Use a variety of weight decays
@@ -634,7 +638,10 @@ and only reaching `~0.5` loss on the validation set.
 ##### Experiment 8.5
 
 In this experiment I tried fine-tuning the pretrained DenseNet networks from torchvision, though they didn't work very 
-well. Probably due to the fact that the images were being normalized between 0-1.
+well. Probably due to the fact that the images were being normalized between 0-1. I also tried training DenseNet from 
+scratch using the new data augmentation technique (by not normalizing the data) but that also gave unstable results 
+which is quite interesting as I would have imagined it would have no problem training.
+
 ##### Experiment 9
 
 Experiment Config:
@@ -707,7 +714,10 @@ Results:
 
 There doesn't seem to be much difference, and it seems like the minimum error I'm getting for each model is `~0.2` so 
 since I've determined an neural network architecture to use, the next step is to explore ensembling with the networks.
-Also I could try using differ
+In particular, looking at different trained models and seeing if I am able to find decent models that aren't highly
+correlated with each other.
 
 Another thing that I haven't tried is to put dropout between the ResNet blocks and the fully connected layer after the 
-GAP layer. Also I could try to flatten out the feature maps in the last layer instead of doing global pooling.
+GAP layer. Also I could try to flatten out the feature maps in the last layer instead of doing global pooling. Or maybe
+use a toy CNN to see how well it does as I do believe that DenseNet/Resnets
+

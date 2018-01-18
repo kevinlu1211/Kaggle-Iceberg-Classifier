@@ -47,7 +47,7 @@ class TransitionLayer(nn.Sequential):
 
 class DenseNet(nn.Module):
     def __init__(self, growth_rate=16, block_config=(6, 12, 24, 16), n_init_features=32,
-                 bn_size=4, dropout_rates=0, n_classes=1, input_shape=(3, 75, 75)):
+                 bn_size=4, dropout_rates=[0, 0, 0, 0], n_classes=1, input_shape=(3, 75, 75)):
         super(DenseNet, self).__init__()
 
         self.features = nn.Sequential(OrderedDict([

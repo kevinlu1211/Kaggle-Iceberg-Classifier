@@ -52,6 +52,7 @@ class DataSourceDelegate(object):
         assert self.training_data_path is not None
         training_data = self.load_data(self.training_data_path)
         preprocessed_training_data = self.data_handler.preprocess_data(training_data)
+        shuffle(preprocessed_training_data)
         self.splits = self.data_split(training_data)
         self.training_data = preprocessed_training_data
 
@@ -94,7 +95,8 @@ class DataSourceDelegate(object):
         test_df = self.test_data
         test_dataloader = self.data_handler.create_dataloader(test_df, is_train=False,
                                                               shuffle=False,
-                                                              batch_size=self.batch_size)
+                                                              batch_size=self.batch_size,
+                                                              image_size=self.image_size)
         yield {"test": test_dataloader}
 
 
@@ -106,7 +108,6 @@ class NormalizeThreeChannels(object):
 
         logging.info("Preprocessing data ...")
         logging.info("Reshaping input images ...")
-        data = shuffle(data)
         data['band_1_rs'] = data['band_1'].apply(lambda x: np.array(x).reshape(75, 75))
         data['band_2_rs'] = data['band_2'].apply(lambda x: np.array(x).reshape(75, 75))
         data['band_3_rs'] = (data['band_1_rs'] + data['band_2_rs']) / 2
@@ -174,7 +175,6 @@ class ThreeChannels(object):
 
         logging.info("Preprocessing data ...")
         logging.info("Reshaping input images ...")
-        data = shuffle(data)
         data['band_1_rs'] = data['band_1'].apply(lambda x: np.array(x).reshape(-1, 75, 75))
         data['band_2_rs'] = data['band_2'].apply(lambda x: np.array(x).reshape(-1, 75, 75))
         data['band_3_rs'] = (data['band_1_rs'] + data['band_2_rs']) / 2
@@ -232,7 +232,6 @@ class TwoChannels(object):
 
         logging.info("Preprocessing data ...")
         logging.info("Reshaping input images ...")
-        data = shuffle(data)
         data['band_1_rs'] = data['band_1'].apply(lambda x: np.array(x).reshape(75, 75))
         data['band_2_rs'] = data['band_2'].apply(lambda x: np.array(x).reshape(75, 75))
         data['inc_angle'] = pd.to_numeric(data['inc_angle'], errors='coerce')
@@ -265,6 +264,7 @@ class TwoChannels(object):
     def get_transforms(self, image_size):
         train_transform = transforms.Compose([
             horizontal_flip,
+            vertical_flip,
             convert_image_to_tensor
         ])
 
@@ -313,6 +313,12 @@ def horizontal_flip(image):
     if random.random() > 0.5:
         return cv2.flip(image.copy(), 0)
     return image
+
+def vertical_flip(image):
+    if random.random() > 0.5:
+        return cv2.flip(image.copy(), 1)
+    return image
+
 
 def rotation(image, degrees=45):
     if random.random() > 0.5:

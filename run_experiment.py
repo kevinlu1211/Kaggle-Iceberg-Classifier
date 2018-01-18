@@ -1,6 +1,5 @@
 import argparse
 import logging
-import time
 from src.ExperimentMappings \
     import model_lookup, \
     loss_function_lookup, \
@@ -13,11 +12,14 @@ from src.ExperimentMappings \
 from src.Experiment import ExperimentFactory
 import json
 import itertools
+import numpy as np
+import random
+import torch
 
 def main():
     with open(opts.experiment_config_path, "r") as fp:
         experiment_config = json.load(fp)
-
+    fix_seed(experiment_config.get("seed"))
     experiment_factory = ExperimentFactory(model_lookup,
                                            loss_function_lookup,
                                            optimizer_lookup,
@@ -61,12 +63,20 @@ def main():
         experiment = experiment_factory.create_experiment(new_experiment_config, opts.study_save_path)
         # experiment.train()
 
-
+def fix_seed(seed):
+    if seed is None:
+        return
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--study_save_path", default="../study_results/densenet121_newdataaug")
-    parser.add_argument("--experiment_config_path", default="study_configs/densenet121_experiment.json")
+    parser.add_argument("--study_save_path", default="../study_results/iceresnet_experiment_dataaug_h_v_flip")
+    parser.add_argument("--experiment_config_path", default="study_configs/iceresnet_experiment.json")
     # parser.add_argument("--experiment_config_path", default="study_configs/triple_column_iceresnet_experiment.json")
     # parser.add_argument("--experiment_config_path", default="study_configs/iceresnet2_experiment.json")
     parser.add_argument("--logging_level", default="INFO")

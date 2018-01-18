@@ -1,12 +1,10 @@
 {
   "model": {
-    "name": "IceResNet",
-    "model_configuration_name": "IceResNet",
+    "name": "MyNet",
+    "model_configuration_name": "MyNet",
     "parameters": {
-      "num_classes": 1,
-      "num_rgb": 2,
-      "base": 24,
-      "dropout_rates": [[0,0,0,0]]
+      "dropout_rates": [[0.4,0.2]],
+      "input_shape": [2, 75, 75]
     }
   },
   "optimizer": {
@@ -47,6 +45,10 @@
   "saver_delegate": {
     "name": "StatOil"
   },
-  "n_epochs": 80
+  "evaluation_delegate": {
+    "name": "StatOil"
+  },
+  "n_epochs": 80,
+  "seed": 1234
 }
 
