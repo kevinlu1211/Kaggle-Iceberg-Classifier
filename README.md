@@ -7,8 +7,8 @@ detecting whether the picture has a iceberg or a ship.
 
 #### Things to try:
 * ~~Try and optimize over different kinds of neural network architectures~~
-* Try XGBoost and SVMs (with HOG features) and compare results to CNN
-* Explore stacking with different classifers
+* Try XGBoost and SVMs (with HOG/SIFT features) and compare results to CNN
+* Explore stacking with different classifier (hopefully XGBoost and SVMs will have low correlation with the CNNs)
 * Try to do psuedo-labelling on the test set to create more training data
 * Try expanding number of samples by implementing [Data augmentation by pairing samples
 for images classification](https://arxiv.org/pdf/1801.02929.pdf)
@@ -718,6 +718,5 @@ In particular, looking at different trained models and seeing if I am able to fi
 correlated with each other.
 
 Another thing that I haven't tried is to put dropout between the ResNet blocks and the fully connected layer after the 
-GAP layer. Also I could try to flatten out the feature maps in the last layer instead of doing global pooling. Or maybe
-use a toy CNN to see how well it does as I do believe that DenseNet/Resnets
+GAP layer. Also I could try to flatten out the feature maps in the last layer instead of doing global pooling.
 
