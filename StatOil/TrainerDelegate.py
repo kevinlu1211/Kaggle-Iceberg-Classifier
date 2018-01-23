@@ -4,25 +4,25 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 from pathlib import Path
 
+## TODO: Probably cleaner to superclass/subclass, will refactor in next Kaggle competition
+
 class TrainerDelegate(object):
 
-    def __init__(self, experiment_id, study_save_path):
+    def __init__(self, experiment_id, study_save_path, model_output_method="Standard"):
         self.experiment_id = experiment_id
         self.study_save_path = study_save_path
+        self.model_output_handler = model_output_handlers[model_output_method]
 
     def on_epoch_start(self, dataset):
         train = dataset['train']
         val = dataset['val']
         return train, val
 
-    def create_model_input(self, data):
-        return cudarize(Variable(data['input']))
-
     def create_data_labels(self, data):
         return cudarize(Variable(data['label']))
 
-    def create_model_output(self, model_input, model):
-        model_output = model(model_input)
+    def create_model_output(self, data, model):
+        model_output = self.model_output_handler(data, model)
         return model_output
 
     def apply_output_transformation(self, model_output):
@@ -44,3 +44,19 @@ class TrainerDelegate(object):
                 scheduler.step(validation_loss.data[0])
             else:
                 scheduler.step()
+
+def create_model_output_with_image_statistics(data, model):
+    model_inp_image = cudarize(Variable(data['image']))
+    model_inp_image_stats = cudarize(Variable(data['image_stats']))
+    model_output = model(model_inp_image, model_inp_image_stats)
+    return model_output
+
+def create_model_output_standard(data, model):
+    model_input = cudarize(Variable(data['input']))
+    model_output = model(model_input)
+    return model_output
+
+model_output_handlers = {
+    "Standard": create_model_output_standard,
+    "ImageStatistics": create_model_output_with_image_statistics
+}

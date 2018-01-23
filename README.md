@@ -7,6 +7,7 @@ detecting whether the picture has a iceberg or a ship.
 
 #### Things to try:
 * ~~Try and optimize over different kinds of neural network architectures~~
+* ~~Data augmentation using Sobel/
 * Try XGBoost and SVMs (with HOG/SIFT features) and compare results to CNN
 * Explore stacking with different classifier (hopefully XGBoost and SVMs will have low correlation with the CNNs)
 * Try to do psuedo-labelling on the test set to create more training data
@@ -713,9 +714,11 @@ Results:
 ![alt_text][image12]
 
 There doesn't seem to be much difference, and it seems like the minimum error I'm getting for each model is `~0.2` so 
-since I've determined an neural network architecture to use, the next step is to explore ensembling with the networks.
-In particular, looking at different trained models and seeing if I am able to find decent models that aren't highly
-correlated with each other.
+the next step is to explore different prediction methods and different architectures that have low correlation with each
+other so that we get better results when ensembling their results. Another thing that I could try is test time 
+augmentation for the CNNs. 
+
+Though for now, I will use GBMs and Fully Convolutional Networks and compare their correlation with my models
 
 Another thing that I haven't tried is to put dropout between the ResNet blocks and the fully connected layer after the 
 GAP layer. Also I could try to flatten out the feature maps in the last layer instead of doing global pooling.

@@ -29,30 +29,39 @@ def main():
                                            evaluation_delegates_lookup,
                                            saver_delegates_lookup)
 
-    # TODO: think of a better way to do this, probably have a separate object to create the config files
+    # TODO: think of a better way to do this, probably use Indirection to have a separate
+    # TODO: object to create the config files
     # hyperparameters = []
     lrs = experiment_config["optimizer"]["parameters"]["lr"]
     # hyperparameters.append(lrs)
-    try:
-        weight_decays = experiment_config["optimizer"]["parameters"]["weight_decay"]
-        dropouts = experiment_config["model"]["parameters"]["dropout_rates"]
-        for lr, weight_decay, dropout in itertools.product(*[lrs, weight_decays, dropouts]):
-            new_experiment_config = experiment_config.copy()
-            new_experiment_config["optimizer"]["parameters"]["lr"] = lr
-            new_experiment_config["optimizer"]["parameters"]["weight_decay"] = weight_decay
-            new_experiment_config["model"]["parameters"]["dropout_rates"] = dropout
-            experiment = experiment_factory.create_experiment(new_experiment_config, opts.study_save_path)
-            experiment.train()
-    except KeyError:
-        weight_decays = experiment_config["optimizer"]["parameters"]["weight_decay"]
-        for lr, weight_decay in itertools.product(*[lrs, weight_decays]):
-            new_experiment_config = experiment_config.copy()
-            new_experiment_config["optimizer"]["parameters"]["lr"] = lr
-            new_experiment_config["optimizer"]["parameters"]["weight_decay"] = weight_decay
-            experiment = experiment_factory.create_experiment(new_experiment_config, opts.study_save_path)
-            experiment.train()
+    # try:
+    #     dropouts = experiment_config["model"]["parameters"]["dropout_rates"]
+    #     weight_decays = experiment_config["optimizer"]["parameters"]["weight_decay"]
+    #     for lr, weight_decay, dropout in itertools.product(*[lrs, weight_decays, dropouts]):
+    #         new_experiment_config = experiment_config.copy()
+    #         new_experiment_config["optimizer"]["parameters"]["lr"] = lr
+    #         new_experiment_config["optimizer"]["parameters"]["weight_decay"] = weight_decay
+    #         new_experiment_config["model"]["parameters"]["dropout_rates"] = dropout
+    #         experiment = experiment_factory.create_experiment(new_experiment_config, opts.study_save_path)
+    #         experiment.train()
+    # except KeyError:
+    #     weight_decays = experiment_config["optimizer"]["parameters"]["weight_decay"]
+    #     for lr, weight_decay in itertools.product(*[lrs, weight_decays]):
+    #         new_experiment_config = experiment_config.copy()
+    #         new_experiment_config["optimizer"]["parameters"]["lr"] = lr
+    #         new_experiment_config["optimizer"]["parameters"]["weight_decay"] = weight_decay
+    #         experiment = experiment_factory.create_experiment(new_experiment_config, opts.study_save_path)
+    #         experiment.train()
 
-
+    dropouts = experiment_config["model"]["parameters"]["dropout_rates"]
+    weight_decays = experiment_config["optimizer"]["parameters"]["weight_decay"]
+    for lr, weight_decay, dropout in itertools.product(*[lrs, weight_decays, dropouts]):
+        new_experiment_config = experiment_config.copy()
+        new_experiment_config["optimizer"]["parameters"]["lr"] = lr
+        new_experiment_config["optimizer"]["parameters"]["weight_decay"] = weight_decay
+        new_experiment_config["model"]["parameters"]["dropout_rates"] = dropout
+        experiment = experiment_factory.create_experiment(new_experiment_config, opts.study_save_path)
+        experiment.train()
     # Fine tuning
     # lrs = experiment_config["optimizer"]["parameters"]["lr"]
     # ft_lrs = experiment_config["optimizer"].get("fine_tuning_parameters", dict()).get("lr")
@@ -60,7 +69,7 @@ def main():
     #     new_experiment_config = experiment_config.copy()
     #     new_experiment_config["optimizer"]["parameters"]["lr"] = base_lr
     #     new_experiment_config["optimizer"]["fine_tuning_parameters"]["lr"] = ft_lr
-        experiment = experiment_factory.create_experiment(new_experiment_config, opts.study_save_path)
+    #     experiment = experiment_factory.create_experiment(new_experiment_config, opts.study_save_path)
         # experiment.train()
 
 def fix_seed(seed):
@@ -75,8 +84,8 @@ def fix_seed(seed):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--study_save_path", default="../study_results/iceresnet_experiment_dataaug_h_v_flip")
-    parser.add_argument("--experiment_config_path", default="study_configs/iceresnet_experiment.json")
+    parser.add_argument("--study_save_path", default="../study_results/mynet2")
+    parser.add_argument("--experiment_config_path", default="study_configs/mynet2_experiment.json")
     # parser.add_argument("--experiment_config_path", default="study_configs/triple_column_iceresnet_experiment.json")
     # parser.add_argument("--experiment_config_path", default="study_configs/iceresnet2_experiment.json")
     parser.add_argument("--logging_level", default="INFO")

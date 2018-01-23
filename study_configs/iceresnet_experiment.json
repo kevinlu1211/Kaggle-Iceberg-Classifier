@@ -6,14 +6,14 @@
       "num_classes": 1,
       "num_rgb": 2,
       "base": 32,
-      "dropout_rates": [[0,0,0,0]]
+      "dropout_rates": [[0, 0, 0, 0]]
     }
   },
   "optimizer": {
     "name": "ADAM",
     "parameters": {
-      "lr": [0.0005, 0.0005, 0.0005, 0.0005, 0.0005],
-      "weight_decay": [0.00005]
+      "lr": [0.0005],
+      "weight_decay": [5e-5]
     }
   },
   "scheduler": {"name": "ReduceLROnPlateau",
@@ -35,11 +35,11 @@
   "data_source_delegate": {
     "name": "StatOil",
     "parameters": {
-      "batch_size": 40,
-      "n_splits": 5,
-      "splits_to_use": 5,
+      "batch_size": 32,
+      "n_splits": 4,
+      "splits_to_use": 4,
       "image_size": [75, 75],
-      "data_handler_method": "TwoChannels",
+      "data_handler_method": "ThreeChannels",
       "testing_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/test.json",
       "training_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/train.json"
     }
@@ -50,6 +50,6 @@
   "evaluation_delegate": {
     "name": "StatOil"
   },
-  "n_epochs": 80
+  "n_epochs": 60
 }
 

@@ -47,14 +47,14 @@ class SaverDelegate(object):
         models_checkpoint_folder_path.mkdir(parents=True, exist_ok=True)
         torch.save(model.state_dict(), os.fspath(f"{models_checkpoint_folder_path}/epoch_{epoch}-loss_{loss}.pth"))
 
-    def on_epoch_end(self, model, epoch, fold_num):
-
+    def update_all_results(self, epoch, fold_num):
         [d.update({"fold": fold_num, "epoch": epoch}) for d in self.training_results_for_epoch]
         self.all_results.extend(self.training_results_for_epoch)
 
         [d.update({"fold": fold_num, "epoch": epoch}) for d in self.validation_results_for_epoch]
         self.all_results.extend(self.validation_results_for_epoch)
 
+    def update_loss_results(self, epoch, fold_num):
         train_df = pd.DataFrame(self.training_results_for_epoch)
         validation_df = pd.DataFrame(self.validation_results_for_epoch)
         avg_train_loss = train_df.mean()['loss']
@@ -69,9 +69,11 @@ class SaverDelegate(object):
         self.all_loss_results.append(dict(fold=fold_num, epoch=epoch,
                                           training_loss=avg_train_loss, validation_loss=avg_validation_loss))
 
+    def on_epoch_end(self, model, epoch, fold_num):
+        self.update_all_results(epoch, fold_num)
+        self.update_loss_results(epoch, fold_num)
+        avg_validation_loss = self.all_loss_results[-1]["validation_loss"]
         self._save_model(model, epoch, fold_num, avg_validation_loss)
-
-
         self.last_epoch_validation_loss = avg_validation_loss
         self.training_results_for_epoch = []
         self.validation_results_for_epoch = []

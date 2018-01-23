@@ -7,7 +7,7 @@
       "growth_rate": 16,
       "n_init_features": 32,
       "bn_size": 4,
-      "dropout_rates": [[0.2, 0.15, 0.1 , 0.05]],
+      "dropout_rates": [[0, 0, 0, 0]],
       "n_classes": 1,
       "input_shape": [2, 75, 75]
     }
@@ -24,7 +24,7 @@
     "parameters": {
       "verbose": true,
       "threshold": 0.1,
-      "patience": 10,
+      "patience": 15,
       "factor": 0.5
     }
   },
@@ -40,10 +40,10 @@
   "data_source_delegate": {
     "name": "StatOil",
     "parameters": {
-      "batch_size": 40,
+      "batch_size": 32,
       "n_splits": 5,
-      "splits_to_use": 2,
-      "data_handler_method": "TwoChannels",
+      "splits_to_use": 5,
+      "data_handler_method": "TwoChannelsScaled",
       "image_size": [75, 75],
       "testing_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/test.json",
       "training_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/train.json"
@@ -52,6 +52,6 @@
   "saver_delegate": {
     "name": "StatOil"
   },
-  "n_epochs": 50
+  "n_epochs": 70
 }
 

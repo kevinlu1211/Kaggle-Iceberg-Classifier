@@ -155,9 +155,6 @@ def se_resnet152(num_classes):
     return model
 
 
-
-
-
 class IceSEBasicBlock(nn.Module):
     expansion = 1
 
@@ -173,6 +170,7 @@ class IceSEBasicBlock(nn.Module):
                                                   stride=1, bias=False),
                                         nn.BatchNorm2d(planes))
         self.global_features = []
+
     def forward(self, x):
         residual = self.downsample(x)
 
@@ -189,6 +187,65 @@ class IceSEBasicBlock(nn.Module):
 
         return out
 
+#####################################################################################################################
+
+class IceResNetFCN(nn.Module):
+    def __init__(self, block, n_size=1, num_classes=1, num_rgb=2, base=32, dropout_rates=[0, 0, 0, 0]):
+        super().__init__()
+        self.base = base
+        self.num_classes = num_classes
+        self.inplane = self.base  # 45 epochs
+        # self.inplane = 16 # 57 epochs
+        self.conv1 = nn.Conv2d(num_rgb, self.inplane, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(self.inplane)
+        self.relu = nn.ReLU(inplace=True)
+        self.layer1 = self._make_layer(block, self.inplane, blocks=2 * n_size, stride=2)
+        self.layer2 = self._make_layer(block, self.inplane * 2, blocks=2 * n_size, stride=2)
+        self.layer3 = self._make_layer(block, self.inplane * 4, blocks=2 * n_size, stride=2)
+        self.layer4 = conv3x3(self.inplane, 1)
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
+        self.dropout_rates = dropout_rates
+        self.fc = nn.Linear(int(8 * self.base), num_classes)
+        nn.init.kaiming_normal(self.fc.weight)
+        self.sig = nn.Sigmoid()
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
+    def _make_layer(self, block, planes, blocks, stride):
+
+        layers = []
+        for i in range(1, blocks):
+            layers.append(block(self.inplane, planes, stride))
+            self.inplane = planes
+
+        return nn.Sequential(*layers)
+
+    def forward(self, x, features_only=False):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+
+        x = F.dropout(self.layer1(x), p=self.dropout_rates[0])
+        x = F.dropout(self.layer2(x), p=self.dropout_rates[1])
+        x = F.dropout(self.layer3(x), p=self.dropout_rates[2])
+        x = F.dropout(self.layer4(x), p=self.dropout_rates[3])
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        # print (x.data.size())
+        if features_only:
+            return x
+        return x
+
+def iceresnet_fcn(n_size=1, num_classes=1, num_rgb=3, base=32, dropout_rates=[0, 0, 0, 0]):
+    return IceResNetFCN(IceSEBasicBlock, n_size, num_classes, num_rgb, base, dropout_rates)
+
+#####################################################################################################################
 
 class IceResNet(nn.Module):
     def __init__(self, block, n_size=1, num_classes=1, num_rgb=2, base=32, dropout_rates=[0, 0, 0, 0]):
@@ -244,8 +301,11 @@ class IceResNet(nn.Module):
             x = F.dropout(self.fc(x), p=self.dropout_rates[3])
         return x
 
+
 def iceresnet(n_size=1, num_classes=1, num_rgb=3, base=32, dropout_rates=[0, 0, 0, 0]):
     return IceResNet(IceSEBasicBlock, n_size, num_classes, num_rgb, base, dropout_rates)
+
+#####################################################################################################################
 
 class TripleColumnIceResNet(nn.Module):
     def __init__(self, block, n_size, num_classes, num_rgbs, bases, drop_rates, fc_drop_rate, input_shape=[2, 75, 75]):
@@ -289,3 +349,62 @@ def triple_column_iceresnet(num_classes, n_size=1, num_rgbs=[1, 1, 2],
                             fc_drop_rate=0, input_size=[2, 75, 75]):
     return TripleColumnIceResNet(IceSEBasicBlock, n_size, num_classes, num_rgbs, bases, drop_rates, fc_drop_rate,)
 
+#####################################################################################################################
+
+class IceResNetWithImageStatistics(nn.Module):
+    def __init__(self, block, n_size=1, num_classes=1, num_rgb=2, base=32, dropout_rates=[0, 0, 0, 0]):
+        super(IceResNet, self).__init__()
+        self.base = base
+        self.num_classes = num_classes
+        self.inplane = self.base  # 45 epochs
+        # self.inplane = 16 # 57 epochs
+        self.conv1 = nn.Conv2d(num_rgb, self.inplane, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(self.inplane)
+        self.relu = nn.ReLU(inplace=True)
+        self.layer1 = self._make_layer(block, self.inplane, blocks=2 * n_size, stride=2)
+        self.layer2 = self._make_layer(block, self.inplane * 2, blocks=2 * n_size, stride=2)
+        self.layer3 = self._make_layer(block, self.inplane * 4, blocks=2 * n_size, stride=2)
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
+        self.dropout_rates = dropout_rates
+        self.fc = nn.Linear(int(8 * self.base), num_classes)
+        nn.init.kaiming_normal(self.fc.weight)
+        self.sig = nn.Sigmoid()
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
+    def _make_layer(self, block, planes, blocks, stride):
+
+        layers = []
+        for i in range(1, blocks):
+            layers.append(block(self.inplane, planes, stride))
+            self.inplane = planes
+
+        return nn.Sequential(*layers)
+
+    def forward(self, x, features_only=False):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+
+        x = F.dropout(self.layer1(x), p=self.dropout_rates[0])
+        x = F.dropout(self.layer2(x), p=self.dropout_rates[1])
+        x = F.dropout(self.layer3(x), p=self.dropout_rates[2])
+        # x = self.layer4(x)
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        # print (x.data.size())
+        if features_only:
+            return x
+        else:
+            x = F.dropout(self.fc(x), p=self.dropout_rates[3])
+        return x
+
+
+def iceresnet_image_statistics(n_size=1, num_classes=1, num_rgb=3, base=32, dropout_rates=[0, 0, 0, 0]):
+    return IceResNetWithImageStatistics(IceSEBasicBlock, n_size, num_classes, num_rgb, base, dropout_rates)

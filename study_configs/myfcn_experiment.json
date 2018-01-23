@@ -1,16 +1,16 @@
 {
   "model": {
-    "name": "MyNet",
-    "model_configuration_name": "MyNet",
+    "name": "MyFCN",
+    "model_configuration_name": "MyFCN",
     "parameters": {
-      "dropout_rates": [[0.4,0.2]],
+      "dropout_rates": [[0, 0]],
       "input_shape": [2, 75, 75]
     }
   },
   "optimizer": {
     "name": "ADAM",
     "parameters": {
-      "lr": [0.0001],
+      "lr": [0.001, 0.0003, 0.0001, 0.00003],
       "weight_decay": [0]
     }
   },

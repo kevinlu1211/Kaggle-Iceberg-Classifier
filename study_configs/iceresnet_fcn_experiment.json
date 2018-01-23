@@ -1,26 +1,28 @@
 {
   "model": {
-    "name": "MyNet",
-    "model_configuration_name": "MyNet",
+    "name": "IceResNetFCN",
+    "model_configuration_name": "IceResNetFCN",
     "parameters": {
-      "dropout_rates": [[0.4,0.2]],
-      "input_shape": [2, 75, 75]
+      "num_classes": 1,
+      "num_rgb": 2,
+      "base": 32,
+      "dropout_rates": [[0,0,0,0]]
     }
   },
   "optimizer": {
     "name": "ADAM",
     "parameters": {
-      "lr": [0.0001],
-      "weight_decay": [0]
+      "lr": [0.0005],
+      "weight_decay": [0.001, 0.0005, 0.0001]
     }
   },
   "scheduler": {"name": "ReduceLROnPlateau",
-        "parameters": {"factor": 0.5,
-         "patience": 20,
-         "threshold": 0.1,
-         "verbose": true
-         }
-    },
+      "parameters": {"factor": 0.5,
+       "patience": 15,
+       "threshold": 0.1,
+       "verbose": true
+       }
+  },
   "loss_function": {
     "name": "BCELoss"
   },
@@ -33,11 +35,11 @@
   "data_source_delegate": {
     "name": "StatOil",
     "parameters": {
-      "batch_size": 32,
-      "n_splits": 10,
-      "splits_to_use": 10,
+      "batch_size": 40,
+      "n_splits": 8,
+      "splits_to_use": 8,
       "image_size": [75, 75],
-      "data_handler_method": "TwoChannelsScaled",
+      "data_handler_method": "TwoChannels",
       "testing_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/test.json",
       "training_data_path": "/home/kevin/workspace/Kaggle/Iceberg-Classifier-Challenge/src/data/train.json"
     }
