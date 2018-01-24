@@ -23,6 +23,8 @@ class SaverDelegate(object):
         self.validation_results_for_epoch = []
         self.training_loss_for_epoch = []
         self.validation_loss_for_epoch = []
+        self.best_validation_df = None
+        self.best_validation_score = 1
 
     def save_results(self, data, model_output, model_loss, mode):
         labels = data['label'].numpy()
@@ -59,6 +61,8 @@ class SaverDelegate(object):
         validation_df = pd.DataFrame(self.validation_results_for_epoch)
         avg_train_loss = train_df.mean()['loss']
         avg_validation_loss = validation_df.mean()['loss']
+        if avg_validation_loss < self.best_validation_score:
+            self.best_validation_df = validation_df
         avg_train_acc = (train_df['predicted'] == train_df['label']).mean()
         avg_validation_acc = (validation_df['predicted'] == validation_df['label']).mean()
         logging.info(f"Training loss for epoch: {epoch} is {avg_train_loss}")

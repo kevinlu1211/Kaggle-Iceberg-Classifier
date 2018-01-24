@@ -155,7 +155,11 @@ def main():
                                            saver_delegates_lookup)
 
     experiment = experiment_factory.create_experiment(experiment_config, opts.study_save_path)
+
+    # Create the out of fold predictions
+    oof_preds = []
     for fold_num, data_fold in enumerate(experiment.data_source_delegate.retrieve_dataset_for_train()):
+        oof_pred = []
 
         train_df_data = defaultdict(list)
         val_df_data = defaultdict(list)
@@ -209,7 +213,7 @@ def main():
                            early_stopping_rounds=min_round)
 
         pred_xgb = model1.predict(xgb_valid, ntree_limit=model1.best_ntree_limit + 45)
-
+        oof_pred.append(pd.DataFrame({'id': val_df['id'].values, 'xgb_target': pred_xgb}))
 
         # Now train the neural network
         experiment.model, experiment.optimizer, experiment.scheduler = experiment.model_factory.create_model()
@@ -235,6 +239,9 @@ def main():
                                                    experiment.scheduler)
             experiment.saver_delegate.update_all_results(fold_num, epoch)
             experiment.saver_delegate.update_loss_results(fold_num, epoch)
+        pred_nn = experiment.saver_delegate.best_validation_df
+
+
 
 
 
