@@ -3,7 +3,7 @@
 This repository is a competition hosted on [Kaggle](https://www.kaggle.com/c/statoil-iceberg-classifier-challenge) for 
 detecting whether the picture has a iceberg or a ship.
 
-#### Current rank: 708/3500
+#### Final rank: 525/3617
 
 #### Things to try:
 * ~~Try and optimize over different kinds of neural network architectures~~
@@ -715,8 +715,9 @@ Results:
 There doesn't seem to be much difference, and it seems like the minimum error I'm getting for each model is `~0.2` so 
 since I've determined an neural network architecture to use, the next step is to explore ensembling with the networks.
 In particular, looking at different trained models and seeing if I am able to find decent models that aren't highly
-correlated with each other.
+correlated with each other. So for my next submission I'm going to use a GBM with the neural networks, as the 
+predictions of GBMs aren't that correlated with the NN results having a correlation of `~0.5` instead of `~0.85` 
+compared with the correlation between NN's.
 
-Another thing that I haven't tried is to put dropout between the ResNet blocks and the fully connected layer after the 
-GAP layer. Also I could try to flatten out the feature maps in the last layer instead of doing global pooling.
-
+In my final submission by ensembling the NN's and the GBMs I got a log loss of `0.15` and though it is higher than that 
+of my ensemble of NN models this was the one that I used for my final submission.
