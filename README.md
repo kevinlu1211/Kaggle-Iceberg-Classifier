@@ -3,12 +3,12 @@
 This repository is a competition hosted on [Kaggle](https://www.kaggle.com/c/statoil-iceberg-classifier-challenge) for 
 detecting whether the picture has a iceberg or a ship.
 
-#### Final rank: 525/3617
+#### Final rank: 435/3342 
 
 #### Things to try:
 * ~~Try and optimize over different kinds of neural network architectures~~
-* Try XGBoost and SVMs (with HOG/SIFT features) and compare results to CNN
-* Explore stacking with different classifier (hopefully XGBoost and SVMs will have low correlation with the CNNs)
+* ~~Try XGBoost and SVMs (with HOG/SIFT features) and compare results to CNN~~
+* ~~Explore stacking with different classifier (hopefully XGBoost and SVMs will have low correlation with the CNNs)~~
 * Try to do psuedo-labelling on the test set to create more training data
 * Try expanding number of samples by implementing [Data augmentation by pairing samples
 for images classification](https://arxiv.org/pdf/1801.02929.pdf)
